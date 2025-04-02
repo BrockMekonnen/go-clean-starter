@@ -1,13 +1,15 @@
 package domain
 
+import "context"
+
 type Credentials struct {
 	Uid   uint  
 	Scope []string
 }
 
 type AuthRepository interface {
-	Generate(payload Credentials) (string, error)
-	Decode(accessToken string) (*Credentials, error) // Changed return type
-	Hash(plainText string) (string, error)
-	Compare(plainText, hashedText string) (bool, error)
+	Generate(ctx context.Context, payload Credentials) (string, error)
+	Decode(ctx context.Context, accessToken string) (*Credentials, error)
+	Hash(ctx context.Context, plainText string) (string, error)
+	Compare(ctx context.Context, plainText, hashedText string) (bool, error)
 }

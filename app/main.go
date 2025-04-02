@@ -6,46 +6,66 @@ import (
 	"syscall"
 
 	app "github.com/BrockMekonnen/go-clean-starter/core"
+	di "github.com/BrockMekonnen/go-clean-starter/core/di"
+	log "github.com/BrockMekonnen/go-clean-starter/core/lib/logger"
+	modules "github.com/BrockMekonnen/go-clean-starter/core/modules"
+	"gorm.io/gorm"
 )
 
 func main() {
-	// Initialize Logger
-	app.InitLogger()
-	logger := app.Logger
+	//* Initialize Dependency Injection Container
+	container := di.InitContainer()
+
+	//* Initialize Logger
+	logger := log.NewLogger()
 	logger.Info("Starting application...")
+	err := container.Provide(func() *log.Log { return logger })
+	if err != nil {
+		logger.Fatal(err)
+	}
 
-	// Load Configurations
-	config := app.LoadConfig()
+	//* Load Configurations
+	config := app.LoadConfig(logger)
+	err = container.Provide(func() *app.AppConfig { return config })
+	if err != nil {
+		logger.Fatal("Failed to provide logger", err)
+	}
 
-	// Initialize Dependency Injection Container
-	container := app.InitContainer()
-
-	// Initialize Server
-	server, shutdownServer := app.NewServer(config.HTTP, logger)
-
-	// Initialize Database
-	db, shutdownDB, err := app.NewDatabase(config.Database)
+	//* Initialize Database
+	dbProvider, shutdownDB, err := app.NewDatabase(config.Database, *logger)
 	if err != nil {
 		logger.Fatal("Failed to initialize database:", err)
 	}
+	err = container.Provide(func() app.DatabaseProvider { return dbProvider })
+	if err != nil {
+		logger.Fatal("Failed to provide database provider", err)
+	}
+	err = container.Provide(func() *gorm.DB { return dbProvider.GetDB() }) 
+	if err != nil {
+		logger.Fatal("Failed to provide db", err)
+	}
 
-	// Provide Dependencies to Container
-	container.Provide(func() *app.AppConfig { return config })
-	container.Provide(func() *app.ServerRegistry { return server })
-	container.Provide(func() *app.DatabaseRegistry { return db })
-	container.Provide(func() *app.LoggerRegistry { return &app.LoggerRegistry{} })
+	//* Initialize Server
+	server, shutdownServer := app.NewServer(*config, container, *logger)
+	err = container.Provide(func() *app.ServerRegistry { return server })
+	if err != nil {
+		logger.Fatal("Failed to provide server", err)
+	}
 
-	// Start Server
-	app.StartServer(server, logger)
+	//* Register internal modules
+	modules.RegisterInternalModules()
 
-	// Graceful Shutdown Handling
+	//* Start Server
+	app.StartServer(server, *logger)
+
+	//* Graceful Shutdown Handling
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, os.Interrupt, syscall.SIGTERM)
 
 	<-shutdownChan
 	logger.Info("Shutting down application...")
 
-	// Perform Cleanup
+	//* Perform Cleanup
 	shutdownServer()
 	shutdownDB()
 	logger.Info("Application exited successfully.")

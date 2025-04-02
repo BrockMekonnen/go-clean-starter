@@ -1,18 +1,27 @@
 package infrastructure
 
 import (
-	"github.com/BrockMekonnen/go-clean-starter/internal/_lib/ddd"
+	"encoding/json"
+	"fmt"
+
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/ddd"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/domain"
+	"github.com/jackc/pgtype"
 )
 
-// private type to satisfy ddd.DataMapper interface check
 type userMapper struct{}
 
-// Verify interface compliance at compile time
-var _ ddd.DataMapper[domain.User, UserSchema] = (*userMapper)(nil)
+var _ ddd.DataMapper[domain.User, User] = (*userMapper)(nil)
 
-// ToEntity converts UserSchema to domain.User (package-level function)
-func ToEntity(schema UserSchema) domain.User {
+func ToEntity(schema User) domain.User {
+	var roles []string
+	if schema.Roles.Status == pgtype.Present {
+		err := json.Unmarshal(schema.Roles.Bytes, &roles)
+		if err != nil {
+			fmt.Println("Error:UserMapper:ToEntity: ", err)
+		}
+	}
+
 	return domain.User{
 		Id:        schema.Id,
 		FirstName: schema.FirstName,
@@ -20,34 +29,39 @@ func ToEntity(schema UserSchema) domain.User {
 		Phone:     schema.Phone,
 		Email:     schema.Email,
 		Password:  schema.Password,
-		Roles:     schema.Roles,
+		Roles:     roles,
 		CreatedAt: schema.CreatedAt,
 		UpdatedAt: schema.UpdatedAt,
 		Version:   schema.Version,
 	}
 }
 
-// ToData converts domain.User to UserSchema (package-level function)
-func ToData(user domain.User) UserSchema {
-	return UserSchema{
-		Id:        uint(user.Id),
+func ToData(user domain.User) User {
+	jsonb := pgtype.JSONB{}
+	err := jsonb.Set(user.Roles)
+	if err != nil {
+		fmt.Println("Error:UserMapper:ToEntity: ", err)
+	}
+
+	return User{
+		Id:        user.Id,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Phone:     user.Phone,
 		Email:     user.Email,
 		Password:  user.Password,
-		Roles:     user.Roles,
+		Roles:     jsonb,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 		Version:   user.Version,
 	}
 }
 
-// Interface implementation methods
-func (m *userMapper) ToEntity(schema UserSchema) domain.User {
+// * Interface implementation with error handling
+func (m *userMapper) ToEntity(schema User) domain.User {
 	return ToEntity(schema)
 }
 
-func (m *userMapper) ToData(user domain.User) UserSchema {
+func (m *userMapper) ToData(user domain.User) User {
 	return ToData(user)
 }

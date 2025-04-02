@@ -1,1 +1,41 @@
-GET http://127.0.0.1:3000/status
+@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDM2OTAxNDksInNjb3BlIjpbInVzZXIiXSwidWlkIjoxfQ.th2gvoT2EBE8fOVhQoqtYhaOdra_EXSNVuiY2VVdev4
+@baseUrl = http://127.0.0.1:3000
+
+GET {{baseUrl}}/status
+
+###
+GET {{baseUrl}}/status?error=not-found
+
+###
+POST {{baseUrl}}/api/users/login
+Content-Type: application/json
+
+
+{
+	"email": "johndoe@test.com",
+	"password": "test@test"
+}
+
+###
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+	"firstName": "Jane",
+	"lastName": "Doe",
+	"phone": "+1 123 456 7890",
+	"email": "janedoe@test.com",
+	"password": "test@test",
+	"IsTermAndConditionAgreed": true
+}
+
+###
+GET {{baseUrl}}/api/users/1
+Content-Type: application/json
+Authorization: {{token}}
+
+###
+DELETE {{baseUrl}}/api/users/3
+Content-Type: application/json
+Authorization: {{token}}
+

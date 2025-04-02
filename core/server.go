@@ -1,4 +1,4 @@
-package app
+package core
 
 import (
 	"context"
@@ -8,9 +8,13 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/logger"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/middleware"
+	"github.com/BrockMekonnen/go-clean-starter/internal/_shared/delivery"
+
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/dig"
 )
 
 // ServerConfig holds the configuration for the server
@@ -25,36 +29,43 @@ type ServerRegistry struct {
 	HttpServer *http.Server
 	RootRouter *mux.Router
 	ApiRouter  *mux.Router
+	AuthRouter *mux.Router
 }
 
 // NewServer initializes and returns the HTTP server
-func NewServer(config ServerConfig, logger *logrus.Logger) (*ServerRegistry, func()) {
+func NewServer(config AppConfig, container *dig.Container, logger logger.Log) (*ServerRegistry, func()) {
 	// Create a new router
 	rootRouter := mux.NewRouter()
 
 	// Middleware: Request Logging
-	rootRouter.Use(loggingMiddleware(logger))
+	logOpts := middleware.DefaultLoggerOptions()
+	rootRouter.Use(middleware.HTTPLoggerMiddleware(logger, logOpts))
+	// rootRouter.Use(loggingMiddleware(logger))
+	rootRouter.Use(middleware.RequestContainerMiddleware(container, logger))
 
 	// Middleware: Graceful shutdown
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, os.Interrupt)
 
 	// Middleware: CORS (if enabled)
-	if config.Cors {
+	if config.HTTP.Cors {
 		corsHandler := cors.Default().Handler
 		rootRouter.Use(corsHandler)
 	}
 
-	// Health check route
-	rootRouter.HandleFunc("/status", statusHandler).Methods("GET")
+	// Status check route
+	rootRouter.HandleFunc("/status", middleware.StatusHandler(config.StartedAt)).Methods("GET")
 
 	// API router
 	apiRouter := rootRouter.PathPrefix("/api").Subrouter()
-	// Register API endpoints here...
+	authRouter := rootRouter.PathPrefix("/api").Subrouter()
+
+	opts := delivery.DefaultErrorConverters
+	rootRouter.Use(middleware.ErrorHandler(opts, &logger))
 
 	// Create HTTP server
 	server := &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", config.Host, config.Port),
+		Addr:         fmt.Sprintf("%s:%d", config.HTTP.Host, config.HTTP.Port),
 		Handler:      rootRouter,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -77,28 +88,12 @@ func NewServer(config ServerConfig, logger *logrus.Logger) (*ServerRegistry, fun
 		HttpServer: server,
 		RootRouter: rootRouter,
 		ApiRouter:  apiRouter,
+		AuthRouter: authRouter,
 	}, shutdown
 }
 
-// loggingMiddleware logs HTTP requests
-func loggingMiddleware(logger *logrus.Logger) mux.MiddlewareFunc {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			start := time.Now()
-			next.ServeHTTP(w, r)
-			logger.Infof("[%s] %s %s %s", r.Method, r.RequestURI, r.RemoteAddr, time.Since(start))
-		})
-	}
-}
-
-// statusHandler returns a 200 OK response
-func statusHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
-}
-
 // StartServer starts the HTTP server
-func StartServer(server *ServerRegistry, logger *logrus.Logger) {
+func StartServer(server *ServerRegistry, logger logger.Log) {
 	go func() {
 		logger.Infof("Starting server on %s", server.HttpServer.Addr)
 		if err := server.HttpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {

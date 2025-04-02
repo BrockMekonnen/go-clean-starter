@@ -1,16 +1,21 @@
-package app
+package core
 
 import (
-	"github.com/BrockMekonnen/go-clean-starter/internal/_lib"
+	"time"
+
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/env"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/logger"
 )
 
 // AppConfig holds the configuration values
 type AppConfig struct {
 	AppName     string
 	Environment string
+	StartedAt   time.Time
 	HTTP        ServerConfig
 	Swagger     SwaggerConfig
 	Database    DatabaseConfig
+	Encryption EncryptionConfig
 }
 
 // SwaggerConfig holds Swagger documentation configurations
@@ -21,16 +26,21 @@ type SwaggerConfig struct {
 	DocEndpoint string
 }
 
+type EncryptionConfig struct {
+	JWTKey  string
+}
+
 // LoadConfig initializes and loads the application configuration
-func LoadConfig() *AppConfig {
-	_lib.LoadEnv()
+func LoadConfig(logger *logger.Log) *AppConfig {
+	_lib.LoadEnv(logger)
 
 	return &AppConfig{
 		AppName:     "clean-go-api",
 		Environment: _lib.GetEnvironment("development"),
+		StartedAt:   time.Now(),
 		HTTP: ServerConfig{
-			Host: _lib.GetEnvString("HOST", "127.0.0.1"),
-			Port: _lib.GetEnvNumber("PORT", 3000),
+			Host: _lib.GetEnvString("HTTP_HOST", "127.0.0.1"),
+			Port: _lib.GetEnvNumber("HTTP_PORT", 3000),
 			Cors: true,
 		},
 		Swagger: SwaggerConfig{
@@ -45,6 +55,9 @@ func LoadConfig() *AppConfig {
 			Username: _lib.GetEnvString("DB_USER", "birukmk"),
 			Password: _lib.GetEnvString("DB_PASS", "112544"),
 			Port:     _lib.GetEnvNumber("DB_PORT", 5432),
+		},
+		Encryption: EncryptionConfig{
+			JWTKey: _lib.GetEnvString("JWT_SECRET_KEY", "d6a6a047d84d6884"),
 		},
 	}
 }

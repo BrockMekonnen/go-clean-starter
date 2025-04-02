@@ -2,35 +2,31 @@ package delivery
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/usecase"
-	"github.com/labstack/echo/v4"
+	"github.com/gorilla/mux"
 )
 
-type DeleteUserDependencies struct {
-	DeleteUser usecase.DeleteUser
+type DeleteUserHandlerDeps struct {
+	DeleteUser usecase.DeleteUserUsecase
 }
 
-type DeleteUserRequest struct {
-	Id uint `json:"id"`
-}
-
-func DeleteUserHandler(deps DeleteUserDependencies) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var req DeleteUserRequest
-
-		// Bind and validate request
-		if err := c.Bind(&req); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid request format")
+func NewDeleteUserHandler(deps DeleteUserHandlerDeps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Extract and validate ID
+		vars := mux.Vars(r)
+		userID, err := strconv.ParseUint(vars["id"], 10, 32)
+		if err != nil || userID == 0 {
+			http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+			return
 		}
 
-		_, err := deps.DeleteUser(c.Request().Context(), req.Id)
-
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		// Execute use case
+		if _, err = deps.DeleteUser(r.Context(), uint(userID)); err != nil {
+			panic(err)
 		}
 
-		// Return response
-		return c.JSON(http.StatusCreated, nil)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }

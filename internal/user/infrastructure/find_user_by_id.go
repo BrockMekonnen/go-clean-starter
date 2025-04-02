@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	cErrors "github.com/BrockMekonnen/go-clean-starter/internal/_lib/errors"
+	cErrors "github.com/BrockMekonnen/go-clean-starter/core/lib/errors"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/query"
 	"gorm.io/gorm"
 )
@@ -19,12 +19,13 @@ func NewFindUserByIdHandler(db *gorm.DB) query.FindUserById {
 }
 
 func (h *FindUserByIdHandler) Handle(ctx context.Context, id uint) (query.FindUserByIdResult, error) {
-	var user UserSchema
+	var user User
 
 	result := h.db.WithContext(ctx).Where("id = ?", id).First(&user)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return query.FindUserByIdResult{}, cErrors.NotFoundError{}
+			panic(cErrors.NewNotFoundError("", "", result))
+			// return query.FindUserByIdResult{}, cErrors.NotFoundError{}
 		}
 		return query.FindUserByIdResult{}, result.Error
 	}

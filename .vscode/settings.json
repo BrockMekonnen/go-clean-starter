@@ -1,8 +1,13 @@
 {
 	"cSpell.words": [
+		"birukmk",
+		"Debugf",
 		"gorm",
+		"Infof",
 		"labstack",
 		"logrus",
-		"Subrouter"
+		"pgtype",
+		"Subrouter",
+		"Warnf"
 	]
 }

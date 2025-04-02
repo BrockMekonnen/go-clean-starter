@@ -1,0 +1,38 @@
+{
+	"Insert Project Import Path": {
+	  "prefix": "imp_root",
+	  "body": [
+		"\"github.com/BrockMekonnen/go-clean-starter\""
+	  ],
+	},
+	"Insert Internal Import Path": {
+	  "prefix": "imp_int",
+	  "body": [
+		"\"github.com/BrockMekonnen/go-clean-starter/internal\""
+	  ],
+	},
+	"Import_Logger": {
+	  "prefix": "imp_log",
+	  "body": [
+		"\"github.com/BrockMekonnen/go-clean-starter/core/lib/logger\""
+	  ],
+	},
+	"Import_DI": {
+	  "prefix": "imp_di",
+	  "body": [
+		"\"github.com/BrockMekonnen/go-clean-starter/core/di\""
+	  ],
+	},
+	"Import_DB": {
+	  "prefix": "imp_db",
+	  "body": [
+		"\"github.com/BrockMekonnen/go-clean-starter/core/db\""
+	  ],
+	},
+	"Import_Respond_Lib": {
+	  "prefix": "imp_res",
+	  "body": [
+		"\"github.com/BrockMekonnen/go-clean-starter/core/lib/res\""
+	  ],
+	}
+}

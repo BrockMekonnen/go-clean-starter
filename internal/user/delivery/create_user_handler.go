@@ -1,15 +1,16 @@
 package delivery
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
+	respond "github.com/BrockMekonnen/go-clean-starter/core/lib/res"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/usecase"
+	"github.com/go-playground/validator/v10"
 )
 
-type CreateUserDependencies struct {
-	CreateUser usecase.CreateUser
+type CreateUserHandlerDeps struct {
+	CreateUser usecase.CreateUserUsecase
 }
 
 type CreateUserRequest struct {
@@ -21,27 +22,27 @@ type CreateUserRequest struct {
 	IsTermAndConditionAgreed bool   `json:"isTermAndConditionAgreed" validate:"required"`
 }
 
-type CreateUserResponse struct {
-	ID string `json:"id"`
-}
-
-func CreateUserHandler(deps CreateUserDependencies) echo.HandlerFunc {
+// NewCreateUserHandler creates the handler with explicit dependencies
+func NewCreateUserHandler(deps CreateUserHandlerDeps) http.HandlerFunc {
 	validate := validator.New()
 
-	return func(c echo.Context) error {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateUserRequest
 
-		// Bind and validate request
-		if err := c.Bind(&req); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid request format")
+		// Bind request
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request format", http.StatusBadRequest)
+			return
 		}
 
+		// Validate request
 		if err := validate.Struct(req); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
-		// Call use case
-		userID, err := deps.CreateUser(c.Request().Context(), usecase.CreateUserDTO{
+		// Execute use case
+		userID, err := deps.CreateUser(r.Context(), usecase.CreateUserParams{
 			FirstName:                req.FirstName,
 			LastName:                 req.LastName,
 			Phone:                    req.Phone,
@@ -51,13 +52,10 @@ func CreateUserHandler(deps CreateUserDependencies) echo.HandlerFunc {
 		})
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
-		// Return response
-		return c.JSON(http.StatusCreated, CreateUserResponse{
-			ID: userID,
-		})
+		respond.Success(w, http.StatusCreated, userID)
 	}
 }
-

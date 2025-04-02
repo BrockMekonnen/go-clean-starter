@@ -1,7 +1,7 @@
 package query
 
 import (
-	"github.com/BrockMekonnen/go-clean-starter/internal/_lib/cqrs"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/cqrs"
 )
 
 type UserDTO struct {
@@ -10,7 +10,7 @@ type UserDTO struct {
 	LastName        string  
 	Phone           string  
 	Email           string  
-	Roles           []string
+	Roles           any
 }
 
 
