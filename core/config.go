@@ -52,8 +52,8 @@ func LoadConfig(logger *logger.Log) *AppConfig {
 		Database: DatabaseConfig{
 			Database: _lib.GetEnvString("DB_NAME", "go-clean"),
 			Host:     _lib.GetEnvString("DB_HOST", "127.0.0.1"),
-			Username: _lib.GetEnvString("DB_USER", "birukmk"),
-			Password: _lib.GetEnvString("DB_PASS", "112544"),
+			Username: _lib.GetEnvString("DB_USER", "postgres"),
+			Password: _lib.GetEnvString("DB_PASS", "password"),
 			Port:     _lib.GetEnvNumber("DB_PORT", 5432),
 		},
 		Encryption: EncryptionConfig{

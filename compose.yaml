@@ -1,31 +1,49 @@
-version: "3.7"
+
 services:
   web:
-    image: go-clean-starter
-    container_name: go_starter_api
+    build: .
+    container_name: go_clean_starter_api
     ports:
-      - 9090:9090
+      - "9090:9090"
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     volumes:
       - ./config.json:/app/config.json
-
-  mysql:
-    platform: linux/x86_64
-    image: mysql:5.7
-    container_name: go_clean_starter
-    command: mysqld --user=root
-    volumes:
-      - ./article.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - 3306:3306
     environment:
-      - MYSQL_DATABASE=go-starter
-      - MYSQL_USER=user
-      - MYSQL_PASSWORD=password
-      - MYSQL_ROOT_PASSWORD=root
+      - POSTGRES_HOST=postgres  # Uses Docker's internal DNS
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=go-clean
+      - POSTGRES_SSL_MODE=disable
+    networks:
+      - app_network
+
+  postgres:
+    platform: linux/x86_64
+    image: postgres:13-alpine
+    container_name: go_clean_starter_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./misc/migrations:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_DB=go-clean
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U user -d go-clean"]
+      interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+
+networks:
+  app_network:
+    driver: bridge

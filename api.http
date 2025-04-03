@@ -1,5 +1,5 @@
 @token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDM2OTAxNDksInNjb3BlIjpbInVzZXIiXSwidWlkIjoxfQ.th2gvoT2EBE8fOVhQoqtYhaOdra_EXSNVuiY2VVdev4
-@baseUrl = http://127.0.0.1:3000
+@baseUrl = http://localhost:9090
 
 GET {{baseUrl}}/status
 
