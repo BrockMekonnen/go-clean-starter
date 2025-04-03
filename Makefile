@@ -1,10 +1,9 @@
 # Database
-POSTGRES_USER ?= user
-POSTGRES_PASSWORD ?= password
-POSTGRES_HOST ?= 127.0.0.1
-POSTGRES_PORT ?= 5432
-POSTGRES_DB ?= go-clean
-POSTGRES_SSL_MODE ?= disable
+DB_USER ?= birukmk
+DB_PASS ?= 112544
+DB_HOST ?= localhost
+DB_PORT ?= 5432
+DB_NAME ?= go-clean
 
 # Exporting bin folder to the path for makefile
 export PATH := $(PWD)/bin:$(PATH)
@@ -89,9 +88,12 @@ image-build:
 		--tag go-clean-starter \
 		.
 
+
+
 # ~~~ Database Migrations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-POSTGRES_DSN := "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=$(POSTGRES_SSL_MODE)"
+POSTGRES_DSN := "postgres://$(DB_USER):$(DB_PASS)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+
 
 migrate-up: $(MIGRATE) ## Apply all (or N up) migrations.
 	@ read -p "How many migrations you want to perform (default value: [all]): " N; \

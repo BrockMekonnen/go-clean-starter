@@ -11,12 +11,11 @@ services:
     volumes:
       - ./config.json:/app/config.json
     environment:
-      - POSTGRES_HOST=postgres  # Uses Docker's internal DNS
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=go-clean
-      - POSTGRES_SSL_MODE=disable
+      - DB_HOST=postgres  # Matches your Go app's expected variable
+      - DB_PORT=5432
+      - DB_USER=user
+      - DB_PASS=password
+      - DB_NAME=go-clean
     networks:
       - app_network
 
@@ -30,9 +29,9 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./misc/migrations:/docker-entrypoint-initdb.d
     environment:
-      - POSTGRES_DB=go-clean
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
+      - DB_NAME=go-clean
+      - DB_USER=user
+      - DB_PASS=password
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d go-clean"]
       interval: 5s

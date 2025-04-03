@@ -1,5 +1,5 @@
-@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDM2OTAxNDksInNjb3BlIjpbInVzZXIiXSwidWlkIjoxfQ.th2gvoT2EBE8fOVhQoqtYhaOdra_EXSNVuiY2VVdev4
-@baseUrl = http://localhost:9090
+@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDM3NTM5NjksInNjb3BlIjpbInVzZXIiXSwidWlkIjoxfQ.jQnSGfnoTUbYqyObhMWghW-e2tB4Zhlb80TSLwxC9aI
+@baseUrl = http://0.0.0.0:9090
 
 GET {{baseUrl}}/status
 
@@ -12,7 +12,7 @@ Content-Type: application/json
 
 
 {
-	"email": "johndoe@test.com",
+	"email": "janedoe@test.com",
 	"password": "test@test"
 }
 

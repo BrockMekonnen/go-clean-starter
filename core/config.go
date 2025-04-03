@@ -39,8 +39,8 @@ func LoadConfig(logger *logger.Log) *AppConfig {
 		Environment: _lib.GetEnvironment("development"),
 		StartedAt:   time.Now(),
 		HTTP: ServerConfig{
-			Host: _lib.GetEnvString("HTTP_HOST", "127.0.0.1"),
-			Port: _lib.GetEnvNumber("HTTP_PORT", 3000),
+			Host: _lib.GetEnvString("HTTP_HOST", "0.0.0.0"),
+			Port: _lib.GetEnvNumber("HTTP_PORT", 9090),
 			Cors: true,
 		},
 		Swagger: SwaggerConfig{
