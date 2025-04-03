@@ -18,7 +18,7 @@ This is a clean architecture starter template for Golang applications, designed 
 Each module follows a structured approach with the following subdirectories:
 ```
 - domain         # Entity definitions and business rules
-- usecase        # Business logic and application use cases
+- app            # Business logic and application use cases + Query interfaces
 - infrastructure # Database, external APIs, etc.
 - delivery       # HTTP handlers and middleware
 ```
