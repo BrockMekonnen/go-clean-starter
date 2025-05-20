@@ -3,7 +3,6 @@ package infrastructure
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	cErrors "github.com/BrockMekonnen/go-clean-starter/core/lib/errors"
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/hashids"
@@ -128,7 +127,6 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*domain
 		return nil, result.Error
 	}
 
-	fmt.Println(userSchema)
 	user, err := ToEntity(userSchema)
 	if err != nil {
 		return &domain.User{}, cErrors.NewBadRequestError[any]("Error occurred while encoding user ID!", "", nil)
