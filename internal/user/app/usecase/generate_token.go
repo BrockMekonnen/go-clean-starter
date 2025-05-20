@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/contracts"
 	sharedDomain "github.com/BrockMekonnen/go-clean-starter/internal/_shared/domain"
@@ -30,22 +29,19 @@ func NewGenerateTokenUsecase(deps GenerateTokenDeps) GenerateTokenUsecase {
 		user, err := deps.UserRepository.FindByEmail(ctx, payload.Email)
 
 		if err != nil || user == nil {
-			return "", sharedDomain.NewBusinessError("Incorrect Email.", "")
+			return "", sharedDomain.NewBusinessError("Invalid email or password.", "")
 		}
 
-		fmt.Println("password: " + user.Password)
 		isMatch, err := deps.AuthRepository.Compare(ctx, payload.Password, user.Password)
-		fmt.Printf("after is match %t \n", isMatch)
-		fmt.Printf("%v", err)
 		if err != nil || !isMatch {
-			return "", sharedDomain.NewBusinessError("Incorrect Password.", "")
+			return "", sharedDomain.NewBusinessError("Invalid email or password.", "")
 		}
 
 		token, err := deps.AuthRepository.Generate(ctx, domain.Credentials{
 			Uid: user.Id, Scope: user.Roles})
 
 		if err != nil {
-			return "", sharedDomain.NewBusinessError("Decryption Failed", "")
+			return "", sharedDomain.NewBusinessError("Failed to generate authentication token.", "")
 		}
 
 		return token, nil

@@ -1,4 +1,4 @@
-@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc4MzQ3NzAsInNjb3BlIjpbInVzZXIiXSwidWlkIjoiYm80bDNnQnYifQ._ETocqVgyKuUUGkGFAvBdWyEboJeBaoP2YNsDSCbdWQ
+@token = Bearer 
 @baseUrl = http://0.0.0.0:9090
 
 GET {{baseUrl}}/status
@@ -6,10 +6,7 @@ GET {{baseUrl}}/status
 ###
 GET {{baseUrl}}/status?error=not-found
 
-###
-GET {{baseUrl}}/api/users/me
-Content-Type: application/json
-Authorization: {{token}}
+
 
 ###
 POST {{baseUrl}}/api/users/login
@@ -17,7 +14,7 @@ Content-Type: application/json
 
 {
 	"email": "janedoe3@test.com",
-	"password": ""
+	"password": "test@test"
 }
 
 ###
@@ -34,7 +31,12 @@ Content-Type: application/json
 }
 
 ###
-GET {{baseUrl}}/api/users?limit=3&page=1
+GET {{baseUrl}}/api/users/me
+Content-Type: application/json
+Authorization: {{token}}
+
+###
+GET {{baseUrl}}/api/users?limit=10&page=1
 Content-Type: application/json
 Authorization: {{token}}
 
@@ -44,7 +46,7 @@ Content-Type: application/json
 Authorization: {{token}}
 
 ###
-DELETE {{baseUrl}}/api/users/2
+DELETE {{baseUrl}}/api/users/bo4l3gBv
 Content-Type: application/json
 Authorization: {{token}}
 
