@@ -10,19 +10,13 @@ import (
 
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/logger"
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/middleware"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/respond"
 	"github.com/BrockMekonnen/go-clean-starter/internal/_shared/delivery"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"go.uber.org/dig"
 )
-
-// ServerConfig holds the configuration for the server
-type ServerConfig struct {
-	Host string
-	Port int
-	Cors bool
-}
 
 // ServerRegistry holds the server components
 type ServerRegistry struct {
@@ -48,9 +42,11 @@ func NewServer(config AppConfig, container *dig.Container, logger logger.Log) (*
 	signal.Notify(shutdownChan, os.Interrupt)
 
 	// Middleware: CORS (if enabled)
+	var handler http.Handler = rootRouter
+
 	if config.HTTP.Cors {
-		corsHandler := cors.Default().Handler
-		rootRouter.Use(corsHandler)
+		corsHandler := cors.AllowAll() // You can customize this as needed
+		handler = corsHandler.Handler(rootRouter)
 	}
 
 	// Status check route
@@ -62,11 +58,13 @@ func NewServer(config AppConfig, container *dig.Container, logger logger.Log) (*
 
 	opts := delivery.DefaultErrorConverters
 	rootRouter.Use(middleware.ErrorHandler(opts, &logger))
+	//* Error Response Converter
+	respond.RegisterConverters(delivery.DefaultErrorConverters)
 
 	// Create HTTP server
 	server := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", config.HTTP.Host, config.HTTP.Port),
-		Handler:      rootRouter,
+		Handler:      handler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

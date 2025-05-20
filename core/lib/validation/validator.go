@@ -1,10 +1,13 @@
 package validation
 
 import (
-	"fmt"
+	"encoding/json"
+	"net/http"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
+	"github.com/gorilla/mux"
+
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/errors"
 )
 
 type ValidationSchemas struct {
@@ -27,122 +30,141 @@ func NewValidator(schemas ValidationSchemas) *Validator {
 	}
 }
 
-func (v *Validator) GetBody(c echo.Context) (interface{}, error) {
+func formatValidationError(fe validator.FieldError) string {
+	return "Field validation for '" + fe.Field() + "' failed on the '" + fe.Tag() + "' tag"
+}
+
+func (v *Validator) GetBody(r *http.Request) (interface{}, error) {
 	if v.schemas.Body == nil {
 		var body map[string]interface{}
-		if err := c.Bind(&body); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			return nil, err
 		}
 		return body, nil
 	}
 
 	body := v.schemas.Body
-	if err := c.Bind(&body); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		return nil, err
 	}
 
 	if err := v.validate.Struct(body); err != nil {
-		return nil, NewValidationError("body", err)
+		if verr, ok := err.(validator.ValidationErrors); ok {
+			msg := formatValidationError(verr[0])
+			return nil, errors.NewValidationError(msg, "body", verr)
+		}
+		return nil, err
 	}
 
 	return body, nil
 }
 
-func (v *Validator) GetParams(c echo.Context) (map[string]string, error) {
+func (v *Validator) GetParams(r *http.Request) (map[string]string, error) {
+	vars := mux.Vars(r)
 	if v.schemas.Params == nil {
-		params := make(map[string]string)
-		for _, name := range c.ParamNames() {
-			params[name] = c.Param(name)
-		}
-		return params, nil
+		return vars, nil
 	}
-
-	// For params, we typically validate against the path parameters directly
-	// since they're simple string values
-	params := make(map[string]string)
-	for _, name := range c.ParamNames() {
-		params[name] = c.Param(name)
-	}
-
-	// If you need complex param validation, you would need to implement it here
-	return params, nil
+	//TODO Optional: Add validation logic for params here
+	return vars, nil
 }
 
-func (v *Validator) GetQuery(c echo.Context) (map[string]interface{}, error) {
-	if v.schemas.Query == nil {
-		query := make(map[string]interface{})
-		for name, values := range c.QueryParams() {
-			if len(values) == 1 {
-				query[name] = values[0]
-			} else {
-				query[name] = values
-			}
+func (v *Validator) GetQuery(r *http.Request) (map[string]interface{}, error) {
+	query := make(map[string]interface{})
+	q := r.URL.Query()
+
+	for key, values := range q {
+		if len(values) == 1 {
+			query[key] = values[0]
+		} else {
+			query[key] = values
 		}
+	}
+
+	if v.schemas.Query == nil {
 		return query, nil
 	}
 
-	// Query validation would need custom implementation based on your needs
-	// This is a simplified version
-	query := make(map[string]interface{})
-	for name, values := range c.QueryParams() {
-		if len(values) == 1 {
-			query[name] = values[0]
-		} else {
-			query[name] = values
+	data, err := json.Marshal(query)
+	if err != nil {
+		return nil, err
+	}
+
+	querySchema := v.schemas.Query
+	if err := json.Unmarshal(data, &querySchema); err != nil {
+		return nil, err
+	}
+
+	if err := v.validate.Struct(querySchema); err != nil {
+		if verr, ok := err.(validator.ValidationErrors); ok {
+			msg := formatValidationError(verr[0]) // Get cleaned message
+			return nil, errors.NewValidationError(msg, "query", verr)
 		}
+		return nil, err
 	}
 
 	return query, nil
 }
 
-func (v *Validator) GetHeaders(c echo.Context) (map[string]string, error) {
-	if v.schemas.Headers == nil {
-		headers := make(map[string]string)
-		for name := range c.Request().Header {
-			headers[name] = c.Request().Header.Get(name)
+func (v *Validator) GetHeaders(r *http.Request) (map[string]string, error) {
+	headers := make(map[string]string)
+	for name, values := range r.Header {
+		if len(values) > 0 {
+			headers[name] = values[0]
 		}
+	}
+
+	if v.schemas.Headers == nil {
 		return headers, nil
 	}
 
-	// Header validation would need custom implementation
-	headers := make(map[string]string)
-	for name := range c.Request().Header {
-		headers[name] = c.Request().Header.Get(name)
+	data, err := json.Marshal(headers)
+	if err != nil {
+		return nil, err
+	}
+
+	headerSchema := v.schemas.Headers
+	if err := json.Unmarshal(data, &headerSchema); err != nil {
+		return nil, err
+	}
+
+	if err := v.validate.Struct(headerSchema); err != nil {
+		if verr, ok := err.(validator.ValidationErrors); ok {
+			msg := formatValidationError(verr[0]) // Get cleaned message
+			return nil, errors.NewValidationError(msg, "headers", verr)
+		}
+		return nil, err
 	}
 
 	return headers, nil
 }
 
-func (v *Validator) GetCookies(c echo.Context) (map[string]string, error) {
+func (v *Validator) GetCookies(r *http.Request) (map[string]string, error) {
+	cookieMap := make(map[string]string)
+	for _, cookie := range r.Cookies() {
+		cookieMap[cookie.Name] = cookie.Value
+	}
+
 	if v.schemas.Cookies == nil {
-		cookies := make(map[string]string)
-		for _, cookie := range c.Cookies() {
-			cookies[cookie.Name] = cookie.Value
+		return cookieMap, nil
+	}
+
+	data, err := json.Marshal(cookieMap)
+	if err != nil {
+		return nil, err
+	}
+
+	cookieSchema := v.schemas.Cookies
+	if err := json.Unmarshal(data, &cookieSchema); err != nil {
+		return nil, err
+	}
+
+	if err := v.validate.Struct(cookieSchema); err != nil {
+		if verr, ok := err.(validator.ValidationErrors); ok {
+			msg := formatValidationError(verr[0]) // Get cleaned message
+			return nil, errors.NewValidationError(msg, "cookies", verr)
 		}
-		return cookies, nil
+		return nil, err
 	}
 
-	// Cookie validation would need custom implementation
-	cookies := make(map[string]string)
-	for _, cookie := range c.Cookies() {
-		cookies[cookie.Name] = cookie.Value
-	}
-
-	return cookies, nil
-}
-
-type ValidationError struct {
-	Target string
-	Err    error
-}
-
-func NewValidationError(target string, err error) *ValidationError {
-	return &ValidationError{
-		Target: target,
-		Err:    err,
-	}
-}
-
-func (e *ValidationError) Error() string {
-	return fmt.Sprintf("validation failed for %s: %v", e.Target, e.Err)
+	return cookieMap, nil
 }

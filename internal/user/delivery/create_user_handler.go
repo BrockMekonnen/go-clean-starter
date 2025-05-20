@@ -1,12 +1,11 @@
 package delivery
 
 import (
-	"encoding/json"
 	"net/http"
 
-	respond "github.com/BrockMekonnen/go-clean-starter/core/lib/res"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/respond"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/validation"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/usecase"
-	"github.com/go-playground/validator/v10"
 )
 
 type CreateUserHandlerDeps struct {
@@ -24,22 +23,20 @@ type CreateUserRequest struct {
 
 // NewCreateUserHandler creates the handler with explicit dependencies
 func NewCreateUserHandler(deps CreateUserHandlerDeps) http.HandlerFunc {
-	validate := validator.New()
-
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req CreateUserRequest
+		// Set up validator with request body schema
+		validator := validation.NewValidator(validation.ValidationSchemas{
+			Body: &CreateUserRequest{},
+		})
 
-		// Bind request
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "Invalid request format", http.StatusBadRequest)
+		// Get and validate request body
+		body, err := validator.GetBody(r)
+		if err != nil {
+			respond.Error(w, err)
 			return
 		}
 
-		// Validate request
-		if err := validate.Struct(req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+		req := body.(*CreateUserRequest)
 
 		// Execute use case
 		userID, err := deps.CreateUser(r.Context(), usecase.CreateUserParams{
@@ -52,10 +49,10 @@ func NewCreateUserHandler(deps CreateUserHandlerDeps) http.HandlerFunc {
 		})
 
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			respond.Error(w, err)
 			return
 		}
 
-		respond.Success(w, http.StatusCreated, userID)
+		respond.SuccessWithData(w, http.StatusCreated, userID)
 	}
 }

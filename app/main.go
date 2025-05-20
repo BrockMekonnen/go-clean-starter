@@ -5,8 +5,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	app "github.com/BrockMekonnen/go-clean-starter/core"
+	core "github.com/BrockMekonnen/go-clean-starter/core"
 	di "github.com/BrockMekonnen/go-clean-starter/core/di"
+	hashids "github.com/BrockMekonnen/go-clean-starter/core/lib/hashids"
 	log "github.com/BrockMekonnen/go-clean-starter/core/lib/logger"
 	modules "github.com/BrockMekonnen/go-clean-starter/core/modules"
 	"gorm.io/gorm"
@@ -25,29 +26,36 @@ func main() {
 	}
 
 	//* Load Configurations
-	config := app.LoadConfig(logger)
-	err = container.Provide(func() *app.AppConfig { return config })
+	config := core.LoadConfig(logger)
+	err = container.Provide(func() *core.AppConfig { return config })
 	if err != nil {
 		logger.Fatal("Failed to provide logger", err)
 	}
 
 	//* Initialize Database
-	dbProvider, shutdownDB, err := app.NewDatabase(config.Database, *logger)
+	dbProvider, shutdownDB, err := core.NewDatabase(config.Database, *logger)
 	if err != nil {
 		logger.Fatal("Failed to initialize database:", err)
 	}
-	err = container.Provide(func() app.DatabaseProvider { return dbProvider })
+	err = container.Provide(func() core.DatabaseProvider { return dbProvider })
 	if err != nil {
 		logger.Fatal("Failed to provide database provider", err)
 	}
-	err = container.Provide(func() *gorm.DB { return dbProvider.GetDB() }) 
+	err = container.Provide(func() *gorm.DB { return dbProvider.GetDB() })
 	if err != nil {
 		logger.Fatal("Failed to provide db", err)
 	}
+	//* Initialize Id Hasher
+	err = container.Provide(func() (hashids.HashID, error) {
+		return hashids.NewHashIDService(config.Encryption)
+	})
+	if err != nil {
+		logger.Fatal("Failed to provide HashID", err)
+	}
 
 	//* Initialize Server
-	server, shutdownServer := app.NewServer(*config, container, *logger)
-	err = container.Provide(func() *app.ServerRegistry { return server })
+	server, shutdownServer := core.NewServer(*config, container, *logger)
+	err = container.Provide(func() *core.ServerRegistry { return server })
 	if err != nil {
 		logger.Fatal("Failed to provide server", err)
 	}
@@ -56,7 +64,7 @@ func main() {
 	modules.RegisterInternalModules()
 
 	//* Start Server
-	app.StartServer(server, *logger)
+	core.StartServer(server, *logger)
 
 	//* Graceful Shutdown Handling
 	shutdownChan := make(chan os.Signal, 1)

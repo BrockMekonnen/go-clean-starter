@@ -66,7 +66,6 @@ var DefaultErrorConverters = []ErrorConverter{
 				"code":    ve.Code,
 				"status":  status,
 				"message": ve.Message,
-				"details": details,
 			}
 		},
 	),
@@ -151,7 +150,6 @@ var DefaultErrorConverters = []ErrorConverter{
 				"error":   be.Name,
 				"code":    be.Code,
 				"status":  http.StatusConflict,
-				"meta":    be.Meta,
 				"message": be.Message,
 			}
 		},
@@ -169,7 +167,6 @@ var DefaultErrorConverters = []ErrorConverter{
 				"error":   be.Name,
 				"code":    be.Code,
 				"status":  http.StatusInternalServerError,
-				"meta":    be.Meta,
 				"message": be.Message,
 			}
 		},

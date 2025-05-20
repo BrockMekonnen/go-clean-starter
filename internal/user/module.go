@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/BrockMekonnen/go-clean-starter/core/di"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/hashids"
 	authDomain "github.com/BrockMekonnen/go-clean-starter/internal/auth/domain"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/query"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/usecase"
@@ -13,7 +14,7 @@ import (
 )
 
 func RegisterUserModule() error {
-	// Get dependencies
+	//* Get dependencies
 	logger := di.GetLogger()
 	db := di.GetDatabase().GetDB()
 
@@ -32,8 +33,16 @@ func RegisterUserModule() error {
 
 	//* Register this module query
 	if err := di.ProvideWrapper("FindUserById",
-		func(db *gorm.DB) query.FindUserById {
-			return infrastructure.NewFindUserByIdHandler(db)
+		func(db *gorm.DB, h hashids.HashID) query.FindUserById {
+			return infrastructure.NewFindUserById(db, h)
+		},
+	); err != nil {
+		return err
+	}
+
+	if err := di.ProvideWrapper("FindUsers",
+		func(db *gorm.DB, h hashids.HashID) query.FindUsers {
+			return infrastructure.NewFindUsers(db, h)
 		},
 	); err != nil {
 		return err
@@ -88,6 +97,14 @@ func RegisterUserModule() error {
 		return err
 	}
 
+	if err := di.ProvideWrapper("GetMeHandlerDeps",
+		func(q query.FindUserById) delivery.GetMeHandlerDeps {
+			return delivery.GetMeHandlerDeps{FindUserById: q}
+		},
+	); err != nil {
+		return err
+	}
+
 	if err := di.ProvideWrapper("GetUserHandlerDeps",
 		func(q query.FindUserById) delivery.GetUserHandlerDeps {
 			return delivery.GetUserHandlerDeps{FindUserById: q}
@@ -99,6 +116,14 @@ func RegisterUserModule() error {
 	if err := di.ProvideWrapper("GenerateTokenHandlerDeps",
 		func(uc usecase.GenerateTokenUsecase) delivery.GenerateTokenHandlerDeps {
 			return delivery.GenerateTokenHandlerDeps{GenerateToken: uc}
+		},
+	); err != nil {
+		return err
+	}
+
+	if err := di.ProvideWrapper("FindUsersHandlerDeps",
+		func(q query.FindUsers) delivery.FindUsersHandlerDeps {
+			return delivery.FindUsersHandlerDeps{FindUsers: q}
 		},
 	); err != nil {
 		return err

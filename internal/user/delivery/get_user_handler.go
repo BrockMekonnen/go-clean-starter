@@ -3,10 +3,9 @@ package delivery
 import (
 	"net/http"
 
-	"github.com/BrockMekonnen/go-clean-starter/core/lib/res"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/respond"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/query"
 	"github.com/gorilla/mux"
-	"strconv"
 )
 
 type GetUserHandlerDeps struct {
@@ -21,24 +20,12 @@ func GetUserHandler(deps GetUserHandlerDeps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get ID from URL path
 		vars := mux.Vars(r)
-		idStr := vars["id"]
-
-		// Convert ID to uint
-		id, err := strconv.ParseUint(idStr, 10, 32)
-		if err != nil {
-			http.Error(w, "Invalid user ID", http.StatusBadRequest)
-			return
-		}
+		id := vars["id"]
 
 		// Call query to find user
-		result, err := deps.FindUserById.Handle(r.Context(), uint(id))
+		result, err := deps.FindUserById.Handle(r.Context(), id)
 		if err != nil {
-			// Handle specific error types
-			// if errors.Is(err, query.ErrUserNotFound) {
-			//     http.Error(w, "User not found", http.StatusNotFound)
-			//     return
-			// }
-			http.Error(w, "Failed to find user", http.StatusInternalServerError)
+			respond.Error(w, err)
 			return
 		}
 

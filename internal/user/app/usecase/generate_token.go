@@ -2,8 +2,9 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/BrockMekonnen/go-clean-starter/core/lib/ddd"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/contracts"
 	sharedDomain "github.com/BrockMekonnen/go-clean-starter/internal/_shared/domain"
 	"github.com/BrockMekonnen/go-clean-starter/internal/auth/domain"
 	userDomain "github.com/BrockMekonnen/go-clean-starter/internal/user/domain"
@@ -22,26 +23,29 @@ type GenerateTokenParams struct {
 }
 
 // GenerateTokenContract makes the function signature readable
-type GenerateTokenUsecase = ddd.ApplicationService[GenerateTokenParams, string]
+type GenerateTokenUsecase = contracts.ApplicationService[GenerateTokenParams, string]
 
 func NewGenerateTokenUsecase(deps GenerateTokenDeps) GenerateTokenUsecase {
 	return func(ctx context.Context, payload GenerateTokenParams) (string, error) {
 		user, err := deps.UserRepository.FindByEmail(ctx, payload.Email)
 
 		if err != nil || user == nil {
-			return "", sharedDomain.NewBusinessError("Incorrect Email.", "USER_NOT_FOUND")
+			return "", sharedDomain.NewBusinessError("Incorrect Email.", "")
 		}
 
+		fmt.Println("password: " + user.Password)
 		isMatch, err := deps.AuthRepository.Compare(ctx, payload.Password, user.Password)
+		fmt.Printf("after is match %t \n", isMatch)
+		fmt.Printf("%v", err)
 		if err != nil || !isMatch {
-			return "", sharedDomain.NewBusinessError("Incorrect Password.", "INVALID_PASSWORD")
+			return "", sharedDomain.NewBusinessError("Incorrect Password.", "")
 		}
 
 		token, err := deps.AuthRepository.Generate(ctx, domain.Credentials{
 			Uid: user.Id, Scope: user.Roles})
 
 		if err != nil {
-			return "", sharedDomain.NewBusinessError("Decryption Failed", "INVALID_TOKEN")
+			return "", sharedDomain.NewBusinessError("Decryption Failed", "")
 		}
 
 		return token, nil

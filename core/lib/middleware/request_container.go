@@ -4,15 +4,10 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/extension"
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/logger"
 	"github.com/gorilla/mux"
 	"go.uber.org/dig"
-)
-
-type containerKey string
-
-const (
-	ContainerContextKey containerKey = "di-container"
 )
 
 func RequestContainerMiddleware(rootContainer *dig.Container, logger logger.Log) mux.MiddlewareFunc {
@@ -42,7 +37,7 @@ func RequestContainerMiddleware(rootContainer *dig.Container, logger logger.Log)
 			}
 
 			// Store scope in context
-			ctx := context.WithValue(r.Context(), ContainerContextKey, reqScope)
+			ctx := context.WithValue(r.Context(), extension.ContainerContextKey, reqScope)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -66,7 +61,7 @@ func registerHTTPObjects(scope *dig.Scope, r *http.Request, w http.ResponseWrite
 
 // GetContainerFromRequest retrieves the request scope
 func GetContainerFromRequest(r *http.Request) *dig.Scope {
-	if container, ok := r.Context().Value(ContainerContextKey).(*dig.Scope); ok {
+	if container, ok := r.Context().Value(extension.ContainerContextKey).(*dig.Scope); ok {
 		return container
 	}
 	return nil

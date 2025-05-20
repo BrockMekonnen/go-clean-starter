@@ -5,6 +5,7 @@ import (
 
 	"github.com/BrockMekonnen/go-clean-starter/core"
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/logger"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/hashids"
 	"github.com/gorilla/mux"
 	"go.uber.org/dig"
 )
@@ -104,4 +105,15 @@ func GetAuthRouter() *mux.Router {
 		panic("auth router not available in container: " + err.Error())
 	}
 	return router
+}
+
+// GetHashID retrieves the HashID service from the DI container
+func GetHashID() hashids.HashID {
+	var h hashids.HashID
+	if err := Get().Invoke(func(hid hashids.HashID) {
+		h = hid
+	}); err != nil {
+		panic("HashID service not available in container: " + err.Error())
+	}
+	return h
 }

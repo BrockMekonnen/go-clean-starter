@@ -9,14 +9,6 @@ import (
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/logger"
 )
 
-// DatabaseConfig holds PostgreSQL connection details
-type DatabaseConfig struct {
-	Database string
-	Host     string
-	Username string
-	Password string
-	Port     int
-}
 
 // DatabaseProvider defines the interface for database access
 type DatabaseProvider interface {

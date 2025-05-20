@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/BrockMekonnen/go-clean-starter/core/lib/ddd"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/contracts"
 	sharedDomain "github.com/BrockMekonnen/go-clean-starter/internal/_shared/domain"
 	"github.com/BrockMekonnen/go-clean-starter/internal/auth/domain"
 )
@@ -13,11 +13,11 @@ type VerifyTokenDeps struct {
 }
 
 type VerifyResponse struct {
-	Uid   uint
+	Uid   string
 	Scope []string
 }
 
-type VerifyTokenUsecase = ddd.ApplicationService[string, VerifyResponse]
+type VerifyTokenUsecase = contracts.ApplicationService[string, VerifyResponse]
 
 func NewVerifyTokenUsecase(deps VerifyTokenDeps) VerifyTokenUsecase {
 	return func(ctx context.Context, token string) (VerifyResponse, error) {

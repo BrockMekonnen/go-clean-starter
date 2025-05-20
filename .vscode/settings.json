@@ -3,11 +3,13 @@
 		"birukmk",
 		"Debugf",
 		"gorm",
+		"hashids",
 		"Infof",
 		"labstack",
 		"logrus",
 		"pgtype",
 		"Subrouter",
+		"verr",
 		"Warnf"
 	]
 }

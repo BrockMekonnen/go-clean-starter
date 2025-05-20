@@ -1,13 +1,17 @@
 package validation
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"strconv"
 	"strings"
 
+	customError "github.com/BrockMekonnen/go-clean-starter/core/lib/errors"
 	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
+	"github.com/gorilla/mux"
 )
 
 var (
@@ -34,16 +38,16 @@ type FieldConfig struct {
 
 type SortField struct {
 	Field     string
-	Direction string // "asc" or "desc"
+	Direction string
 }
 
 type PaginatorOptions struct {
 	UseDefaults bool
 	Fields      struct {
-		Page     interface{} // string or FieldConfig
-		PageSize interface{} // string or FieldConfig
-		Sort     interface{} // string or FieldConfig
-		Filter   interface{} // string or FieldConfig
+		Page     interface{}
+		PageSize interface{}
+		Sort     interface{}
+		Filter   interface{}
 	}
 	Defaults struct {
 		PageSize int
@@ -51,16 +55,15 @@ type PaginatorOptions struct {
 		Filter   map[string]interface{}
 		Sort     []SortField
 	}
-	FilterSchema interface{} // validation schema
+	FilterSchema interface{}
 }
 
 type Paginator struct {
-	opts PaginatorOptions
+	opts     PaginatorOptions
 	validate *validator.Validate
 }
 
 func NewPaginator(opts ...func(*PaginatorOptions)) *Paginator {
-	// Set default options
 	config := PaginatorOptions{
 		UseDefaults: true,
 		Fields: struct {
@@ -87,84 +90,13 @@ func NewPaginator(opts ...func(*PaginatorOptions)) *Paginator {
 		},
 	}
 
-	// Apply custom options
 	for _, opt := range opts {
 		opt(&config)
 	}
 
 	return &Paginator{
-		opts: config,
+		opts:     config,
 		validate: validator.New(),
-	}
-}
-
-// WithDefaults option sets whether to use default values
-func WithDefaults(use bool) func(*PaginatorOptions) {
-	return func(o *PaginatorOptions) {
-		o.UseDefaults = use
-	}
-}
-
-// WithPageField option configures the page field
-func WithPageField(field interface{}) func(*PaginatorOptions) {
-	return func(o *PaginatorOptions) {
-		o.Fields.Page = field
-	}
-}
-
-// WithPageSizeField option configures the page size field
-func WithPageSizeField(field interface{}) func(*PaginatorOptions) {
-	return func(o *PaginatorOptions) {
-		o.Fields.PageSize = field
-	}
-}
-
-// WithSortField option configures the sort field
-func WithSortField(field interface{}) func(*PaginatorOptions) {
-	return func(o *PaginatorOptions) {
-		o.Fields.Sort = field
-	}
-}
-
-// WithFilterField option configures the filter field
-func WithFilterField(field interface{}) func(*PaginatorOptions) {
-	return func(o *PaginatorOptions) {
-		o.Fields.Filter = field
-	}
-}
-
-// WithDefaultPageSize option sets the default page size
-func WithDefaultPageSize(size int) func(*PaginatorOptions) {
-	return func(o *PaginatorOptions) {
-		o.Defaults.PageSize = size
-	}
-}
-
-// WithDefaultPage option sets the default page number
-func WithDefaultPage(page int) func(*PaginatorOptions) {
-	return func(o *PaginatorOptions) {
-		o.Defaults.Page = page
-	}
-}
-
-// WithDefaultSort option sets the default sort fields
-func WithDefaultSort(sort []SortField) func(*PaginatorOptions) {
-	return func(o *PaginatorOptions) {
-		o.Defaults.Sort = sort
-	}
-}
-
-// WithDefaultFilter option sets the default filter
-func WithDefaultFilter(filter map[string]interface{}) func(*PaginatorOptions) {
-	return func(o *PaginatorOptions) {
-		o.Defaults.Filter = filter
-	}
-}
-
-// WithFilterSchema option sets the filter validation schema
-func WithFilterSchema(schema interface{}) func(*PaginatorOptions) {
-	return func(o *PaginatorOptions) {
-		o.FilterSchema = schema
 	}
 }
 
@@ -179,67 +111,77 @@ func (p *Paginator) getFieldConfig(field interface{}) FieldConfig {
 	}
 }
 
-func (p *Paginator) fromRequest(c echo.Context, field FieldConfig) interface{} {
+func (p *Paginator) fromRequest(r *http.Request, field FieldConfig) interface{} {
 	switch field.From {
 	case Query:
-		return c.QueryParam(field.Name)
-	case Params:
-		return c.Param(field.Name)
+		return r.URL.Query().Get(field.Name)
 	case Body:
-		var body map[string]interface{}
-		if err := c.Bind(&body); err == nil {
-			return body[field.Name]
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			return nil
 		}
-		return nil
+		defer r.Body.Close()
+
+		var parsed map[string]interface{}
+		if err := json.Unmarshal(body, &parsed); err != nil {
+			return nil
+		}
+		return parsed[field.Name]
+	case Params:
+		vars := mux.Vars(r)
+		return vars[field.Name]
 	default:
 		return nil
 	}
 }
 
-func (p *Paginator) GetPagination(c echo.Context) (page, pageSize int, err error) {
+func (p *Paginator) GetPagination(r *http.Request) (int, int, error) {
 	pageField := p.getFieldConfig(p.opts.Fields.Page)
 	pageSizeField := p.getFieldConfig(p.opts.Fields.PageSize)
 
-	pageStr := p.fromRequest(c, pageField)
-	pageSizeStr := p.fromRequest(c, pageSizeField)
+	pageStr := p.fromRequest(r, pageField)
+	pageSizeStr := p.fromRequest(r, pageSizeField)
 
-	page = p.opts.Defaults.Page
-	pageSize = p.opts.Defaults.PageSize
+	page := p.opts.Defaults.Page
+	pageSize := p.opts.Defaults.PageSize
 
+	// Parse and validate page
 	if pageStr != nil && pageStr != "" {
-		page, err = strconv.Atoi(fmt.Sprintf("%v", pageStr))
-		if err != nil {
-			if !p.opts.UseDefaults {
-				return 0, 0, fmt.Errorf("%w: %s", ErrMissingField, pageField.Name)
-			}
-			page = p.opts.Defaults.Page
+		pageInt, err := strconv.Atoi(fmt.Sprintf("%v", pageStr))
+		if err != nil || pageInt <= 0 {
+			return 0, 0, customError.NewBadRequestError[any](
+				fmt.Sprintf("Invalid '%s.%s' value: must be a positive integer", pageField.From, pageField.Name), "", nil)
 		}
+		page = pageInt
 	} else if !p.opts.UseDefaults {
-		return 0, 0, fmt.Errorf("%w: %s", ErrMissingField, pageField.Name)
+		return 0, 0, customError.NewBadRequestError[any](
+			fmt.Sprintf("Missing '%s.%s' value", pageField.From, pageField.Name), "", nil)
 	}
 
+	// Parse and validate pageSize
 	if pageSizeStr != nil && pageSizeStr != "" {
-		pageSize, err = strconv.Atoi(fmt.Sprintf("%v", pageSizeStr))
-		if err != nil {
-			if !p.opts.UseDefaults {
-				return 0, 0, fmt.Errorf("%w: %s", ErrMissingField, pageSizeField.Name)
-			}
-			pageSize = p.opts.Defaults.PageSize
+		sizeInt, err := strconv.Atoi(fmt.Sprintf("%v", pageSizeStr))
+		if err != nil || sizeInt <= 0 {
+			return 0, 0, customError.NewBadRequestError[any](
+				fmt.Sprintf("Invalid '%s.%s' value: must be a positive integer", pageSizeField.From, pageSizeField.Name), "", nil)
 		}
+		pageSize = sizeInt
 	} else if !p.opts.UseDefaults {
-		return 0, 0, fmt.Errorf("%w: %s", ErrMissingField, pageSizeField.Name)
+		return 0, 0, customError.NewBadRequestError[any](
+			fmt.Sprintf("Missing '%s.%s' value", pageSizeField.From, pageSizeField.Name), "", nil)
 	}
 
 	return page, pageSize, nil
 }
 
-func (p *Paginator) GetSorter(c echo.Context) ([]SortField, error) {
+func (p *Paginator) GetSorter(r *http.Request) ([]SortField, error) {
 	sortField := p.getFieldConfig(p.opts.Fields.Sort)
-	sortValue := p.fromRequest(c, sortField)
+	sortValue := p.fromRequest(r, sortField)
 
 	if sortValue == nil || sortValue == "" {
 		if !p.opts.UseDefaults {
-			return nil, fmt.Errorf("%w: %s", ErrMissingField, sortField.Name)
+			return nil, customError.NewBadRequestError[any](
+				fmt.Sprintf("Missing '%s.%s' value", sortField.From, sortField.Name), "", nil)
 		}
 		return p.opts.Defaults.Sort, nil
 	}
@@ -251,10 +193,7 @@ func (p *Paginator) GetSorter(c echo.Context) ([]SortField, error) {
 	case []string:
 		sortList = v
 	default:
-		if !p.opts.UseDefaults {
-			return nil, fmt.Errorf("%w: invalid sort format", ErrInvalidFilter)
-		}
-		return p.opts.Defaults.Sort, nil
+		return nil, customError.NewBadRequestError[any]("Invalid sort format", "", nil)
 	}
 
 	result := make([]SortField, 0, len(sortList))
@@ -270,10 +209,7 @@ func (p *Paginator) GetSorter(c echo.Context) ([]SortField, error) {
 			sort = sort[1:]
 		}
 
-		result = append(result, SortField{
-			Field:     sort,
-			Direction: direction,
-		})
+		result = append(result, SortField{Field: sort, Direction: direction})
 	}
 
 	if len(result) == 0 {
@@ -283,26 +219,38 @@ func (p *Paginator) GetSorter(c echo.Context) ([]SortField, error) {
 	return result, nil
 }
 
-func (p *Paginator) GetFilter(c echo.Context) (map[string]interface{}, error) {
+func (p *Paginator) GetFilter(r *http.Request) (map[string]interface{}, error) {
 	filterField := p.getFieldConfig(p.opts.Fields.Filter)
-	filterValue := p.fromRequest(c, filterField)
+	filterValue := p.fromRequest(r, filterField)
 
 	if filterValue == nil || filterValue == "" {
 		if !p.opts.UseDefaults {
-			return nil, fmt.Errorf("%w: %s", ErrMissingField, filterField.Name)
+			return nil, customError.NewBadRequestError[any](
+				fmt.Sprintf("Missing '%s.%s' value", filterField.From, filterField.Name), "", nil)
 		}
 		return p.opts.Defaults.Filter, nil
 	}
 
-	filter, ok := filterValue.(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("%w: invalid filter format", ErrInvalidFilter)
+	var filter map[string]interface{}
+	switch v := filterValue.(type) {
+	case map[string]interface{}:
+		filter = v
+	case string:
+		if err := json.Unmarshal([]byte(v), &filter); err != nil {
+			return nil, customError.NewBadRequestError[any](
+				fmt.Sprintf("Invalid '%s.%s' format: not valid JSON", filterField.From, filterField.Name), "", nil)
+		}
+	default:
+		return nil, customError.NewBadRequestError[any]("Invalid filter format", "", nil)
 	}
 
-	// Validate filter against schema if provided
 	if p.opts.FilterSchema != nil {
-		if err := p.validate.Struct(filter); err != nil {
-			return nil, fmt.Errorf("filter validation failed: %w", err)
+		err := p.validate.Struct(p.opts.FilterSchema)
+		if err != nil {
+			if verr, ok := err.(validator.ValidationErrors); ok {
+				return nil, customError.NewValidationError("Invalid filter parameters", "", verr)
+			}
+			return nil, err
 		}
 	}
 

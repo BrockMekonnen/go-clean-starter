@@ -54,7 +54,7 @@ func (r *AuthRepository) Decode(ctx context.Context, accessToken string) (*domai
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return &domain.Credentials{
-			Uid:   uint(claims["uid"].(float64)), // Assuming "uid" is stored as a float64 in the token
+			Uid:   claims["uid"].(string),
 			Scope: convertToStringSlice(claims["scope"]),
 		}, nil
 	}

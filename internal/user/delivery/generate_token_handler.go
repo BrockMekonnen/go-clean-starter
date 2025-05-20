@@ -1,12 +1,11 @@
 package delivery
 
 import (
-	"encoding/json"
-
-	"github.com/BrockMekonnen/go-clean-starter/core/lib/res"
-	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/usecase"
-	"github.com/go-playground/validator/v10"
 	"net/http"
+
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/respond"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/validation"
+	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/usecase"
 )
 
 type GenerateTokenHandlerDeps struct {
@@ -19,20 +18,20 @@ type GenerateTokenRequest struct {
 }
 
 func NewGenerateTokenHandler(deps GenerateTokenHandlerDeps) http.HandlerFunc {
-	validate := validator.New()
-
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req GenerateTokenRequest
+		// Set up validator with request body schema
+		validator := validation.NewValidator(validation.ValidationSchemas{
+			Body: &GenerateTokenRequest{},
+		})
 
-		// Bind request
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "Invalid request format", http.StatusBadRequest)
-		}
-
-		if err := validate.Struct(req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		// Get and validate request body
+		body, err := validator.GetBody(r)
+		if err != nil {
+			respond.Error(w, err)
 			return
 		}
+
+		req := body.(*GenerateTokenRequest)
 
 		token, err := deps.GenerateToken(r.Context(), usecase.GenerateTokenParams{
 			Email:    req.Email,
@@ -40,10 +39,12 @@ func NewGenerateTokenHandler(deps GenerateTokenHandlerDeps) http.HandlerFunc {
 		})
 
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			respond.Error(w, err)
 			return
 		}
 
-		respond.Success(w, http.StatusOK, token)
+		respond.SuccessWithData(w, http.StatusOK, map[string]interface{}{
+			"token": token,
+		})
 	}
 }

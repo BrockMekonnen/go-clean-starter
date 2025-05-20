@@ -1,47 +1,57 @@
 package errors
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/go-playground/validator/v10"
 )
 
 // ValidationError represents an error due to failed validation.
 type ValidationError struct {
-	*BaseError[ValidationErrorProps] // embedding BaseError for reusability
+	*BaseError[ValidationErrorProps]
 }
 
-// ValidationErrorProps holds additional data associated with a validation error.
 type ValidationErrorProps struct {
-	Target string                  `json:"target"`
+	Target string                     `json:"target"`
 	Error  validator.ValidationErrors `json:"error"`
 }
 
 var (
-	// The symbol to identify the error type.
 	ValidationType = symbol("ValidationError")
-	// Default name for the error.
 	ValidationName = "ValidationError"
 )
 
-// NewValidationError creates a new ValidationError instance.
-func NewValidationError(message string, target string, err validator.ValidationErrors) *ValidationError {
-	// Create the props object for the error
+func NewValidationError(message string, target string, verr validator.ValidationErrors) *ValidationError {
+	var messages []string
+	for _, fieldErr := range verr {
+		messages = append(messages, formatFieldError(fieldErr))
+	}
+	combinedMessage := strings.Join(messages, ", ")
+
 	props := ValidationErrorProps{
 		Target: target,
-		Error:  err,
+		Error:  verr,
 	}
 
-	// Create a new BaseError with the specific type
-	baseError := NewBaseError[ValidationErrorProps](ValidationName, message, ValidationName, props, ValidationType)
+	baseError := NewBaseError(
+		ValidationName,
+		combinedMessage, // Now uses clean formatted messages
+		ValidationName,
+		props,
+		ValidationType,
+	)
+
 	return &ValidationError{
 		BaseError: baseError,
 	}
 }
 
-// Is checks if the error is of type ValidationError.
+func formatFieldError(fe validator.FieldError) string {
+	return fmt.Sprintf("Field validation for '%s' failed on the '%s' rule", fe.Field(), fe.Tag())
+}
+
 func (e *ValidationError) Is(target error) bool {
-	// This checks if the target error is of type ValidationError
-	if _, ok := target.(*ValidationError); ok {
-		return true
-	}
-	return false
+	_, ok := target.(*ValidationError)
+	return ok
 }

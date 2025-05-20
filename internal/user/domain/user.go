@@ -7,7 +7,7 @@ import (
 
 // User represents a user aggregate in the system
 type User struct {
-	Id        uint
+	Id        string
 	FirstName string
 	LastName  string
 	Phone     string
@@ -63,7 +63,7 @@ func (u *User) ChangePassword(newPassword string) *User {
 
 // UserProps defines the properties required to create a new User
 type UserProps struct {
-	Id        uint
+	Id        string
 	FirstName string
 	LastName  string
 	Phone     string

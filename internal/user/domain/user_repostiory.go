@@ -3,20 +3,20 @@ package domain
 import (
 	"context"
 
-	"github.com/BrockMekonnen/go-clean-starter/core/lib/ddd"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/contracts"
 )
 
 // UserRepository is the interface for interacting with users in the system.
 type UserRepository interface {
-	ddd.Repository[User]
+	contracts.Repository[User]
 
 	Update(ctx context.Context, user *User) (error)
 
 	// GetUserById retrieves a user by their ID
-	FindById(ctx context.Context, id uint) (*User, error)
+	FindById(ctx context.Context, id string) (*User, error)
 
 	// DeleteUser removes a user by their ID
-	DeleteUser(ctx context.Context, id uint) error
+	DeleteUser(ctx context.Context, id string) error
 
 	// FindByEmail retrieves a user by their email
 	FindByEmail(ctx context.Context, email string) (*User, error)

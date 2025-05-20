@@ -4,26 +4,34 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/BrockMekonnen/go-clean-starter/core/lib/ddd"
+	"github.com/BrockMekonnen/go-clean-starter/core/di"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/contracts"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/domain"
 	"github.com/jackc/pgtype"
 )
 
 type userMapper struct{}
 
-var _ ddd.DataMapper[domain.User, User] = (*userMapper)(nil)
+var _ contracts.DataMapper[domain.User, User] = (*userMapper)(nil)
 
-func ToEntity(schema User) domain.User {
+func ToEntity(schema User) (domain.User, error) {
+	hashids := di.GetHashID()
+	hashedId, err := hashids.EncodeID(schema.Id)
+	if err != nil {
+		fmt.Println("hashids:err: ", err)
+		return domain.User{}, err
+	}
+
 	var roles []string
 	if schema.Roles.Status == pgtype.Present {
 		err := json.Unmarshal(schema.Roles.Bytes, &roles)
 		if err != nil {
-			fmt.Println("Error:UserMapper:ToEntity: ", err)
+			return domain.User{}, err
 		}
 	}
 
 	return domain.User{
-		Id:        schema.Id,
+		Id:        hashedId,
 		FirstName: schema.FirstName,
 		LastName:  schema.LastName,
 		Phone:     schema.Phone,
@@ -33,18 +41,26 @@ func ToEntity(schema User) domain.User {
 		CreatedAt: schema.CreatedAt,
 		UpdatedAt: schema.UpdatedAt,
 		Version:   schema.Version,
-	}
+	}, nil
 }
 
-func ToData(user domain.User) User {
+func ToData(user domain.User) (User, error) {
+	hashids := di.GetHashID()
+	id, err := hashids.DecodeID(user.Id)
+
+	if err != nil {
+		return User{}, err
+	}
+
 	jsonb := pgtype.JSONB{}
-	err := jsonb.Set(user.Roles)
+	err = jsonb.Set(user.Roles)
 	if err != nil {
 		fmt.Println("Error:UserMapper:ToEntity: ", err)
+		return User{}, err
 	}
 
 	return User{
-		Id:        user.Id,
+		Id:        id,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Phone:     user.Phone,
@@ -54,14 +70,14 @@ func ToData(user domain.User) User {
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 		Version:   user.Version,
-	}
+	}, nil
 }
 
 // * Interface implementation with error handling
-func (m *userMapper) ToEntity(schema User) domain.User {
+func (m *userMapper) ToEntity(schema User) (domain.User, error) {
 	return ToEntity(schema)
 }
 
-func (m *userMapper) ToData(user domain.User) User {
+func (m *userMapper) ToData(user domain.User) (User, error) {
 	return ToData(user)
 }

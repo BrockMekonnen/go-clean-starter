@@ -3,38 +3,53 @@ package infrastructure
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	cErrors "github.com/BrockMekonnen/go-clean-starter/core/lib/errors"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/hashids"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/domain"
 	"gorm.io/gorm"
 )
 
 type UserRepository struct {
-	db *gorm.DB
+	db      *gorm.DB
+	hashIDs hashids.HashID
 }
 
-func NewUserRepository(db *gorm.DB) domain.UserRepository {
-	return &UserRepository{db: db}
+func NewUserRepository(db *gorm.DB, hashIDs hashids.HashID) domain.UserRepository {
+	return &UserRepository{db: db, hashIDs: hashIDs}
 }
 
 // GetNextId generates and returns the next available ID for a user
-func (r *UserRepository) GetNextId(ctx context.Context) (uint, error) {
+func (r *UserRepository) GetNextId(ctx context.Context) (string, error) {
 	var maxId uint
 	err := r.db.WithContext(ctx).Model(&User{}).Select("COALESCE(MAX(id), 0)").Scan(&maxId).Error
 	if err != nil {
-		return 0, err
+		return "", err
 	}
-	return maxId + 1, nil
+	nextId := maxId + 1
+	hashedId, err := r.hashIDs.EncodeID(nextId)
+	if err != nil {
+		return "", cErrors.NewBadRequestError[any]("Error occurred while encoding user ID!", "", nil)
+	}
+	return hashedId, nil
 }
 
 func (r *UserRepository) Store(ctx context.Context, user *domain.User) error {
-	userData := ToData(*user)
+	userData, err := ToData(*user)
+
+	if err != nil {
+		return cErrors.NewBadRequestError[any]("Error occurred while decoding user ID!", "", nil)
+	}
 
 	return r.db.WithContext(ctx).Create(&userData).Error
 }
 
 func (r *UserRepository) Update(ctx context.Context, user *domain.User) error {
-	userData := ToData(*user)
+	userData, err := ToData(*user)
+	if err != nil {
+		return cErrors.NewBadRequestError[any]("Error occurred while decoding user ID!", "", nil)
+	}
 
 	result := r.db.WithContext(ctx).Model(&User{}).
 		Where("id = ? AND version = ?", userData.Id, userData.Version).
@@ -49,37 +64,53 @@ func (r *UserRepository) Update(ctx context.Context, user *domain.User) error {
 	return nil
 }
 
-func (r *UserRepository) FindById(ctx context.Context, id uint) (*domain.User, error) {
+func (r *UserRepository) FindById(ctx context.Context, idStr string) (*domain.User, error) {
 	var userSchema User
+
+	id, err := r.hashIDs.DecodeID(idStr)
+	if err != nil {
+		return &domain.User{}, cErrors.NewBadRequestError[any]("Error occurred while decoding user ID!", "", nil)
+	}
 
 	// Use the context in the database query
 	result := r.db.WithContext(ctx).First(&userSchema, id)
+	println(result)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, cErrors.NotFoundError{}
+			return nil, cErrors.NewNotFoundError("", "", result)
 		}
 		return nil, result.Error
 	}
 
-	user := ToEntity(userSchema)
+	user, err := ToEntity(userSchema)
+	if err != nil {
+		return &domain.User{}, cErrors.NewBadRequestError[any]("Error occurred while encoding user ID!", "", nil)
+	}
+
 	return &user, nil
 }
 
-func (r *UserRepository) DeleteUser(ctx context.Context, id uint) error {
+func (r *UserRepository) DeleteUser(ctx context.Context, idStr string) error {
 	var userSchema User
+
+	id, err := r.hashIDs.DecodeID(idStr)
+	if err != nil {
+		return cErrors.NewBadRequestError[any]("Error occurred while decoding user ID!", "", nil)
+	}
 
 	// Use the context in the database query
 	result := r.db.WithContext(ctx).Delete(&userSchema, id)
+
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return cErrors.NotFoundError{}
+			return cErrors.NewNotFoundError("", "", result)
 		}
 		return result.Error
 	}
 
 	// Check if the user was actually deleted
 	if result.RowsAffected == 0 {
-		return cErrors.NotFoundError{}
+		return cErrors.NewNotFoundError[any]("", "", nil)
 	}
 
 	return nil
@@ -90,15 +121,19 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*domain
 
 	// Use the context in the database query
 	result := r.db.WithContext(ctx).Where("email = ?", email).First(&userSchema)
-
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, cErrors.NotFoundError{}
+			return nil, cErrors.NewNotFoundError("", "", result)
 		}
 		return nil, result.Error
 	}
 
-	user := ToEntity(userSchema)
+	fmt.Println(userSchema)
+	user, err := ToEntity(userSchema)
+	if err != nil {
+		return &domain.User{}, cErrors.NewBadRequestError[any]("Error occurred while encoding user ID!", "", nil)
+	}
+
 	return &user, nil
 }
 
@@ -109,11 +144,15 @@ func (r *UserRepository) FindByPhone(ctx context.Context, phone string) (*domain
 	result := r.db.WithContext(ctx).Where("phone = ?", phone).First(&userSchema)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, cErrors.NotFoundError{}
+			return nil, cErrors.NewNotFoundError("", "", result)
 		}
 		return nil, result.Error
 	}
 
-	user := ToEntity(userSchema)
+	user, err := ToEntity(userSchema)
+	if err != nil {
+		return &domain.User{}, cErrors.NewBadRequestError[any]("Error occurred while encoding user ID!", "", nil)
+	}
+
 	return &user, nil
 }

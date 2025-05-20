@@ -2,12 +2,14 @@ package usecase
 
 import (
 	"context"
-	"github.com/BrockMekonnen/go-clean-starter/core/lib/ddd"
+	"fmt"
+
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/contracts"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/domain"
 )
 
 // DeleteUserContract makes the function signature readable
-type DeleteUserUsecase = ddd.ApplicationService[uint, ddd.Void]
+type DeleteUserUsecase = contracts.ApplicationService[string, contracts.Void]
 
 // DeleteUserDeps declares all required dependencies
 type DeleteUserDeps struct {
@@ -16,11 +18,13 @@ type DeleteUserDeps struct {
 
 // NewDeleteUserUsecase implements the contract
 func NewDeleteUserUsecase(deps DeleteUserDeps) DeleteUserUsecase {
-	return func(ctx context.Context, id uint) (ddd.Void, error) {
+	return func(ctx context.Context, id string) (contracts.Void, error) {
 		err := deps.UserRepo.DeleteUser(ctx, id)
 		if err != nil {
-			return ddd.Void{}, err
+			fmt.Printf("DeleteUser error: %v\n", err)
+			return contracts.Void{}, err
 		}
-		return ddd.Void{}, nil
+
+		return contracts.Void{}, nil
 	}
 }

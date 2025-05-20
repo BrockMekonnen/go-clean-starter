@@ -6,31 +6,13 @@ import (
 	"strings"
 
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/errors"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/extension"
 	"github.com/BrockMekonnen/go-clean-starter/internal/auth/app/usecase"
 	"github.com/gorilla/mux"
 )
 
 type VerifyTokenHandlerDeps struct {
 	VerifyToken usecase.VerifyTokenUsecase
-}
-
-type contextKey string
-
-const (
-	authContextKey contextKey = "auth"
-)
-
-type AuthContext struct {
-	IsAuthenticated bool
-	IsAuthorized    bool
-	IsInjected      bool
-	Credentials     struct {
-		UID   uint
-		Scope []string
-	}
-	Artifacts struct {
-		AccessToken string
-	}
 }
 
 func NewVerifyTokenHandler(deps VerifyTokenHandlerDeps) mux.MiddlewareFunc {
@@ -52,12 +34,12 @@ func NewVerifyTokenHandler(deps VerifyTokenHandlerDeps) mux.MiddlewareFunc {
 			}
 
 			// Set auth context
-			ctx := context.WithValue(r.Context(), authContextKey, AuthContext{
+			ctx := context.WithValue(r.Context(), extension.AuthContextKey, extension.AuthContext{
 				IsAuthenticated: true,
 				IsAuthorized:    true,
 				IsInjected:      true,
 				Credentials: struct {
-					UID   uint
+					UID   string
 					Scope []string
 				}{
 					UID:   credentials.Uid,

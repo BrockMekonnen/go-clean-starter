@@ -5,38 +5,50 @@ import (
 	"errors"
 
 	cErrors "github.com/BrockMekonnen/go-clean-starter/core/lib/errors"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/hashids"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/query"
 	"gorm.io/gorm"
 )
 
 type FindUserByIdHandler struct {
-	db *gorm.DB
+	db      *gorm.DB
+	hashIDs hashids.HashID
 }
 
-// NewFindUserByIdHandler creates a new PostgreSQL implementation
-func NewFindUserByIdHandler(db *gorm.DB) query.FindUserById {
-	return &FindUserByIdHandler{db: db}
+// NewFindUserByIdHandler
+func NewFindUserById(db *gorm.DB, hashIDs hashids.HashID) query.FindUserById {
+	return &FindUserByIdHandler{db: db, hashIDs: hashIDs}
 }
 
-func (h *FindUserByIdHandler) Handle(ctx context.Context, id uint) (query.FindUserByIdResult, error) {
+func (h *FindUserByIdHandler) Handle(ctx context.Context, idStr string) (query.FindUserByIdResult, error) {
 	var user User
+
+	id, err := h.hashIDs.DecodeID(idStr)
+	if err != nil {
+		return query.FindUserByIdResult{}, cErrors.NewBadRequestError[any]("Invalid ID format!", "", nil)
+	}
 
 	result := h.db.WithContext(ctx).Where("id = ?", id).First(&user)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			panic(cErrors.NewNotFoundError("", "", result))
-			// return query.FindUserByIdResult{}, cErrors.NotFoundError{}
+			return query.FindUserByIdResult{}, cErrors.NewNotFoundError("", "", result)
 		}
 		return query.FindUserByIdResult{}, result.Error
 	}
+	hashedId, err := h.hashIDs.EncodeID(uint(user.Id))
+	if err != nil {
+		return query.FindUserByIdResult{}, err // or wrap the error properly
+	}
 
 	userDTO := query.UserDTO{
-		Id:        user.Id,
+		Id:        hashedId,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Phone:     user.Phone,
 		Email:     user.Email,
 		Roles:     user.Roles,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
 	}
 
 	return query.FindUserByIdResult{Data: userDTO}, nil

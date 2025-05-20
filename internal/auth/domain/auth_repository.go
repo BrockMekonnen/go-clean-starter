@@ -3,7 +3,7 @@ package domain
 import "context"
 
 type Credentials struct {
-	Uid   uint  
+	Uid   string  
 	Scope []string
 }
 

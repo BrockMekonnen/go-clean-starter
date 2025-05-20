@@ -1,4 +1,4 @@
-package cqrs
+package contracts
 
 import "context"
 
@@ -13,12 +13,12 @@ type Pagination struct {
 }
 
 type ResultPage struct {
-	Current      int  `json:"current"`
-	PageSize     int  `json:"page_size"`
-	TotalPages   int  `json:"total_pages"`
+	Current       int  `json:"current"`
+	PageSize      int  `json:"page_size"`
+	TotalPages    int  `json:"total_pages"`
 	TotalElements int  `json:"total_elements"`
-	First        bool `json:"first"`
-	Last         bool `json:"last"`
+	First         bool `json:"first"`
+	Last          bool `json:"last"`
 }
 
 type Query[F any] struct {
@@ -26,18 +26,18 @@ type Query[F any] struct {
 }
 
 type PaginatedQuery[F any] struct {
-	Query[F]
+	Filter     F          `json:"filter"`
 	Pagination Pagination `json:"pagination"`
 }
 
 type SortedQuery[F any] struct {
-	Query[F]
-	Sort []Sort `json:"sort"`
+	Filter F      `json:"filter"`
+	Sort   []Sort `json:"sort"`
 }
 
 type SortedPaginatedQuery[F any] struct {
-	Query[F]
-	Sort       []Sort      `json:"sort"`
+	Filter     F          `json:"filter"`
+	Sort       []Sort     `json:"sort"`
 	Pagination Pagination `json:"pagination"`
 }
 
@@ -46,7 +46,7 @@ type QueryResult[T any] struct {
 }
 
 type PaginatedQueryResult[T any] struct {
-	QueryResult[T]
+	Data T          `json:"data"`
 	Page ResultPage `json:"page"`
 }
 

@@ -11,6 +11,7 @@ require (
 	github.com/jackc/pgtype v1.14.4
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.13.3
+	github.com/speps/go-hashids/v2 v2.0.1
 	golang.org/x/crypto v0.36.0
 	gorm.io/gorm v1.25.12
 )
