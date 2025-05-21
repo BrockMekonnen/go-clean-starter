@@ -8,18 +8,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type DeleteUserHandlerDeps struct {
-	DeleteUser usecase.DeleteUserUsecase
-}
-
-func MakeDeleteUserHandler(deps DeleteUserHandlerDeps) http.HandlerFunc {
+func DeleteUserHandler(
+	deleteUser usecase.DeleteUserUsecase,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Extract and validate ID
 		vars := mux.Vars(r)
 		userID := vars["id"]
 
 		// Execute use case
-		_, err := deps.DeleteUser(r.Context(), userID)
+		_, err := deleteUser(r.Context(), userID)
 		if err != nil {
 			respond.Error(w, err)
 			return

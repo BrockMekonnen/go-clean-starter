@@ -20,7 +20,7 @@ func MakeFindUserById(db *gorm.DB, hashIDs hashids.HashID) query.FindUserById {
 	return &FindUserByIdHandler{db: db, hashIDs: hashIDs}
 }
 
-func (h *FindUserByIdHandler) Handle(ctx context.Context, idStr string) (query.FindUserByIdResult, error) {
+func (h *FindUserByIdHandler) Execute(ctx context.Context, idStr string) (query.FindUserByIdResult, error) {
 	var user User
 
 	id, err := h.hashIDs.DecodeID(idStr)

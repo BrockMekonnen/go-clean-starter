@@ -8,22 +8,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type GetUserHandlerDeps struct {
-	FindUserById query.FindUserById
-}
-
 type GetUserRequest struct {
 	Id uint `json:"id"`
 }
 
-func MakeGetUserHandler(deps GetUserHandlerDeps) http.HandlerFunc {
+func GetUserHandler(
+	findUserById query.FindUserById,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get ID from URL path
 		vars := mux.Vars(r)
 		id := vars["id"]
 
 		// Call query to find user
-		result, err := deps.FindUserById.Handle(r.Context(), id)
+		result, err := findUserById.Execute(r.Context(), id)
 		if err != nil {
 			respond.Error(w, err)
 			return

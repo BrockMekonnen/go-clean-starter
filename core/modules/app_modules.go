@@ -10,11 +10,11 @@ import (
 func RegisterInternalModules() {
 	logger := di.GetLogger()
 
-	if err := auth.RegisterAuthModule(); err != nil {
+	if err := auth.MakeAuthModule(); err != nil {
 		logger.Fatal("Failed to register auth module:", err)
 	}
 
-	if err := user.RegisterUserModule(); err != nil {
+	if err := user.MakeUserModule(); err != nil {
 		logger.Fatal("Failed to register user module:", err)
 	}
 

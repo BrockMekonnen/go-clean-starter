@@ -9,11 +9,9 @@ import (
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/query"
 )
 
-type GetMeHandlerDeps struct {
-	FindUserById query.FindUserById
-}
-
-func MakeGetMeHandler(deps GetMeHandlerDeps) http.HandlerFunc {
+func GetMeHandler(
+	findUserById query.FindUserById,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Retrieve AuthContext from context
 		authCtx, ok := r.Context().Value(extension.AuthContextKey).(extension.AuthContext)
@@ -24,9 +22,9 @@ func MakeGetMeHandler(deps GetMeHandlerDeps) http.HandlerFunc {
 
 		// Extract UID
 		userID := authCtx.Credentials.UID
-		
+
 		// Call query to find user
-		result, err := deps.FindUserById.Handle(r.Context(), userID)
+		result, err := findUserById.Execute(r.Context(), userID)
 		if err != nil {
 			respond.Error(w, err)
 			return

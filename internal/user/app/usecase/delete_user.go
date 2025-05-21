@@ -11,15 +11,10 @@ import (
 // DeleteUserContract makes the function signature readable
 type DeleteUserUsecase = contracts.ApplicationService[string, contracts.Void]
 
-// DeleteUserDeps declares all required dependencies
-type DeleteUserDeps struct {
-	UserRepo domain.UserRepository
-}
-
 // NewDeleteUserUsecase implements the contract
-func MakeDeleteUserUsecase(deps DeleteUserDeps) DeleteUserUsecase {
+func MakeDeleteUserUsecase(userRepo domain.UserRepository) DeleteUserUsecase {
 	return func(ctx context.Context, id string) (contracts.Void, error) {
-		err := deps.UserRepo.DeleteUser(ctx, id)
+		err := userRepo.DeleteUser(ctx, id)
 		if err != nil {
 			fmt.Printf("DeleteUser error: %v\n", err)
 			return contracts.Void{}, err

@@ -8,10 +8,6 @@ import (
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/usecase"
 )
 
-type CreateUserHandlerDeps struct {
-	CreateUser usecase.CreateUserUsecase
-}
-
 type CreateUserRequest struct {
 	FirstName                string `json:"firstName" validate:"required"`
 	LastName                 string `json:"lastName" validate:"required"`
@@ -22,7 +18,9 @@ type CreateUserRequest struct {
 }
 
 // NewCreateUserHandler creates the handler with explicit dependencies
-func MakeCreateUserHandler(deps CreateUserHandlerDeps) http.HandlerFunc {
+func CreateUserHandler(
+	createUser usecase.CreateUserUsecase,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Set up validator with request body schema
 		validator := validation.NewValidator(validation.ValidationSchemas{
@@ -39,7 +37,7 @@ func MakeCreateUserHandler(deps CreateUserHandlerDeps) http.HandlerFunc {
 		req := body.(*CreateUserRequest)
 
 		// Execute use case
-		userID, err := deps.CreateUser(r.Context(), usecase.CreateUserParams{
+		userID, err := createUser(r.Context(), usecase.CreateUserParams{
 			FirstName:                req.FirstName,
 			LastName:                 req.LastName,
 			Phone:                    req.Phone,

@@ -2,22 +2,24 @@ package user
 
 import (
 	"github.com/BrockMekonnen/go-clean-starter/core/di"
+	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/query"
+	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/usecase"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/delivery/handlers"
 )
 
-func RegisterUserRoutes() {
+func MakeUserRoutes() {
 	apiRouter := di.GetApiRouter()
 	authRouter := di.GetAuthRouter()
 
-	//* Get handler dependencies
-	createHandler := delivery.MakeCreateUserHandler(di.MustResolve[delivery.CreateUserHandlerDeps]())
-	findUsersHandler := delivery.MakeFindUsersHandler(di.MustResolve[delivery.FindUsersHandlerDeps]())
-	deleteHandler := delivery.MakeDeleteUserHandler(di.MustResolve[delivery.DeleteUserHandlerDeps]())
-	getUserHandler := delivery.MakeGetUserHandler(di.MustResolve[delivery.GetUserHandlerDeps]())
-	getMeHandler := delivery.MakeGetMeHandler(di.MustResolve[delivery.GetMeHandlerDeps]())
-	generateHandler := delivery.MakeGenerateTokenHandler(di.MustResolve[delivery.GenerateTokenHandlerDeps]())
+	//* Get handlers
+	createHandler := delivery.CreateUserHandler(di.MustResolve[usecase.CreateUserUsecase]())
+	findUsersHandler := delivery.FindUsersHandler(di.MustResolve[query.FindUsers]())
+	deleteHandler := delivery.DeleteUserHandler(di.MustResolve[usecase.DeleteUserUsecase]())
+	getUserHandler := delivery.GetUserHandler(di.MustResolve[query.FindUserById]())
+	getMeHandler := delivery.GetMeHandler(di.MustResolve[query.FindUserById]())
+	generateHandler := delivery.GenerateTokenHandler(di.MustResolve[usecase.GenerateTokenUsecase]())
 
-	//* Register routes
+	//* Unauth routes
 	apiRouter.HandleFunc("/users", createHandler).Methods("POST")
 	apiRouter.HandleFunc("/users/login", generateHandler).Methods("POST")
 

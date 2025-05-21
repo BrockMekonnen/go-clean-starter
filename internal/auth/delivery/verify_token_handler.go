@@ -11,11 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type VerifyTokenHandlerDeps struct {
-	VerifyToken usecase.VerifyTokenUsecase
-}
-
-func NewVerifyTokenHandler(deps VerifyTokenHandlerDeps) mux.MiddlewareFunc {
+func VerifyTokenMiddleware(verifyToken usecase.VerifyTokenUsecase) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Extract authorization header
@@ -28,7 +24,7 @@ func NewVerifyTokenHandler(deps VerifyTokenHandlerDeps) mux.MiddlewareFunc {
 			accessToken := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
 
 			// Verify token
-			credentials, err := deps.VerifyToken(r.Context(), accessToken)
+			credentials, err := verifyToken(r.Context(), accessToken)
 			if err != nil {
 				panic(errors.NewBadRequestError("Invalid token", err.Error(), w))
 			}

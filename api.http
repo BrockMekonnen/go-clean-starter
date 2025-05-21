@@ -1,12 +1,10 @@
-@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc4NTcwMjksInNjb3BlIjpbInVzZXIiXSwidWlkIjoia2VQWHJnbjUifQ.cm3r9AJfvsNaq-l-FkJLqXQMewz98Ba6ekDv0jWdJUY
+@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc5MDk3NjksInNjb3BlIjpbInVzZXIiXSwidWlkIjoia2VQWHJnbjUifQ.iJnl6JjUMnKl7EHgLtJPoZI7iTBoSOj0KcGba4KuybI
 @baseUrl = http://0.0.0.0:9090
 
 GET {{baseUrl}}/status
 
 ###
 GET {{baseUrl}}/status?error=not-found
-
-
 
 ###
 POST {{baseUrl}}/api/users/login
@@ -24,8 +22,8 @@ Content-Type: application/json
 {
 	"firstName": "Jane",
 	"lastName": "Doe",
-	"phone": "+1 123 456 7894",
-	"email": "janedoe4@test.com",
+	"phone": "+1 123 456 7896",
+	"email": "janedoe6@test.com",
 	"password": "test@test",
 	"IsTermAndConditionAgreed": true
 }
@@ -36,7 +34,7 @@ Content-Type: application/json
 Authorization: {{token}}
 
 ###
-GET {{baseUrl}}/api/users/NmPLNgv8
+GET {{baseUrl}}/api/users/kePXrgn5
 Content-Type: application/json
 Authorization: {{token}}
 
@@ -46,7 +44,7 @@ Content-Type: application/json
 Authorization: {{token}}
 
 ###
-DELETE {{baseUrl}}/api/users/wo4rwPBa
+DELETE {{baseUrl}}/api/users/bQ7WRPe9
 Content-Type: application/json
 Authorization: {{token}}
 

@@ -8,16 +8,15 @@ import (
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/usecase"
 )
 
-type GenerateTokenHandlerDeps struct {
-	GenerateToken usecase.GenerateTokenUsecase
-}
 
 type GenerateTokenRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
 
-func MakeGenerateTokenHandler(deps GenerateTokenHandlerDeps) http.HandlerFunc {
+func GenerateTokenHandler(
+	generateToken usecase.GenerateTokenUsecase,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Set up validator with request body schema
 		validator := validation.NewValidator(validation.ValidationSchemas{
@@ -33,7 +32,7 @@ func MakeGenerateTokenHandler(deps GenerateTokenHandlerDeps) http.HandlerFunc {
 
 		req := body.(*GenerateTokenRequest)
 
-		token, err := deps.GenerateToken(r.Context(), usecase.GenerateTokenParams{
+		token, err := generateToken(r.Context(), usecase.GenerateTokenParams{
 			Email:    req.Email,
 			Password: req.Password,
 		})

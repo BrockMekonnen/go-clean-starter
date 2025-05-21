@@ -6,18 +6,14 @@ import (
 	"github.com/BrockMekonnen/go-clean-starter/internal/auth/delivery"
 	"github.com/BrockMekonnen/go-clean-starter/internal/auth/domain"
 	"github.com/BrockMekonnen/go-clean-starter/internal/auth/infrastructure"
-
-	"go.uber.org/dig"
 )
 
-func RegisterAuthModule() error {
+func MakeAuthModule() error {
 	logger := di.GetLogger()
 	authRouter := di.GetAuthRouter()
 
 	//* Register this module repository
-	if err := di.ProvideWrapper("AuthRepository",
-		infrastructure.NewAuthRepository, dig.As(new(domain.AuthRepository)),
-	); err != nil {
+	if err := di.ProvideWrapper("AuthRepository", infrastructure.NewAuthRepository); err != nil {
 		return err
 	}
 
@@ -30,18 +26,9 @@ func RegisterAuthModule() error {
 		return err
 	}
 
-	//* Register handlers
-	if err := di.ProvideWrapper("VerifyTokenHandlerDeps",
-		func(uc usecase.VerifyTokenUsecase) delivery.VerifyTokenHandlerDeps {
-			return delivery.VerifyTokenHandlerDeps{VerifyToken: uc}
-		},
-	); err != nil {
-		return err
-	}
-
 	//* Add Verify Token Middleware
-	verifyHandler := delivery.NewVerifyTokenHandler(di.MustResolve[delivery.VerifyTokenHandlerDeps]())
-	authRouter.Use(verifyHandler)
+	verifyTokenMiddleware := delivery.VerifyTokenMiddleware(di.MustResolve[usecase.VerifyTokenUsecase]())
+	authRouter.Use(verifyTokenMiddleware)
 
 	logger.Info("Auth module initialized successfully.")
 	return nil

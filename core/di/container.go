@@ -54,15 +54,15 @@ func MustResolve[T any]() T {
 }
 
 // helper function to handle dependency injection errors
-func ProvideWrapper(name string, provider interface{}, opts ...dig.ProvideOption) error {
+func ProvideWrapper(name string, provider interface{}) error {
 	logger := GetLogger()
-	if err := Provide(provider, opts...); err != nil {
+	err := container.Provide(provider)
+	if err != nil {
 		logger.WithFields(map[string]interface{}{
 			"error": err.Error(),
 		}).Error("Failed to register " + name)
-		return err
 	}
-	return nil
+	return err
 }
 
 func GetLogger() *logger.Log {

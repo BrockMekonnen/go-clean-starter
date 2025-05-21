@@ -7,18 +7,16 @@ import (
 	app "github.com/BrockMekonnen/go-clean-starter/internal/user/app/events"
 )
 
-// Define any dependencies your handler needs
-type OTPHandlerDeps struct{}
 
 // MakeSendOTPEventConsumer subscribes to the OTP.SendOTPEvent and handles it
-func MakeSendOTPEventListener(subscriber events.Subscriber) func(OTPHandlerDeps) error {
+func SendOTPEventListener(subscriber events.Subscriber) func() error {
 	return events.MakeEventConsumer(
 		subscriber,
 		events.EventAddress{
 			Topic:     "OTP",
 			EventType: "SendOTPEvent",
 		},
-		func(deps OTPHandlerDeps) func(events.EventInterface) error {
+		func() func(events.EventInterface) error {
 			return func(evt events.EventInterface) error {
 				// Cast the generic interface to your specific type
 				event, ok := evt.(events.Event[app.SendOTPEventPayload])

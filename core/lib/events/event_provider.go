@@ -27,15 +27,15 @@ func (es *eventStore) GetEvents() []EventInterface {
 }
 
 // EventUsecaseFactory mirrors: (deps, enqueue) => ApplicationService
-type EventUsecaseFactory[Deps any, Payload any, Result any] func(deps Deps, enqueue EnqueueFunc) contracts.ApplicationService[Payload, Result]
+type EventUsecaseFactory[Payload any, Result any] func(enqueue EnqueueFunc) contracts.ApplicationService[Payload, Result]
 
 // MakeEventProvider wraps a usecase factory to defer event publishing
-func EventProvider[Deps any, Payload any, Result any](
-	factory EventUsecaseFactory[Deps, Payload, Result],
-) func(deps Deps, publisher Publisher) contracts.ApplicationService[Payload, Result] {
-	return func(deps Deps, publisher Publisher) contracts.ApplicationService[Payload, Result] {
+func EventProvider[Payload any, Result any](
+	factory EventUsecaseFactory[Payload, Result],
+) func(publisher Publisher) contracts.ApplicationService[Payload, Result] {
+	return func(publisher Publisher) contracts.ApplicationService[Payload, Result] {
 		es := newEventStore()
-		usecase := factory(deps, es.Enqueue)
+		usecase := factory(es.Enqueue)
 
 		return func(ctx context.Context, payload Payload) (Result, error) {
 			result, err := usecase(ctx, payload)

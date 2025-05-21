@@ -9,12 +9,6 @@ import (
 	userDomain "github.com/BrockMekonnen/go-clean-starter/internal/user/domain"
 )
 
-// Dependencies struct for passing dependencies
-type GenerateTokenDeps struct {
-	AuthRepository domain.AuthRepository
-	UserRepository userDomain.UserRepository
-}
-
 // LoginParams defines the input structure for the service
 type GenerateTokenParams struct {
 	Email    string
@@ -24,20 +18,23 @@ type GenerateTokenParams struct {
 // GenerateTokenContract makes the function signature readable
 type GenerateTokenUsecase = contracts.ApplicationService[GenerateTokenParams, string]
 
-func MakeGenerateTokenUsecase(deps GenerateTokenDeps) GenerateTokenUsecase {
+func MakeGenerateTokenUsecase(
+	authRepo domain.AuthRepository,
+	userRepo userDomain.UserRepository,
+) GenerateTokenUsecase {
 	return func(ctx context.Context, payload GenerateTokenParams) (string, error) {
-		user, err := deps.UserRepository.FindByEmail(ctx, payload.Email)
+		user, err := userRepo.FindByEmail(ctx, payload.Email)
 
 		if err != nil || user == nil {
 			return "", sharedDomain.NewBusinessError("Invalid email or password.", "")
 		}
 
-		isMatch, err := deps.AuthRepository.Compare(ctx, payload.Password, user.Password)
+		isMatch, err := authRepo.Compare(ctx, payload.Password, user.Password)
 		if err != nil || !isMatch {
 			return "", sharedDomain.NewBusinessError("Invalid email or password.", "")
 		}
 
-		token, err := deps.AuthRepository.Generate(ctx, domain.Credentials{
+		token, err := authRepo.Generate(ctx, domain.Credentials{
 			Uid: user.Id, Scope: user.Roles})
 
 		if err != nil {

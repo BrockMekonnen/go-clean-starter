@@ -21,32 +21,30 @@ type CreateUserParams struct {
 	IsTermAndConditionAgreed bool
 }
 
-// CreateUserDeps declares all required dependencies
-type CreateUserDeps struct {
-	UserRepo domain.UserRepository
-	AuthRepo authDomain.AuthRepository
-}
-
 // CreateUserContract makes the function signature readable
 type CreateUserUsecase = contracts.ApplicationService[CreateUserParams, string]
 
 // NewCreateUserUsecase constructs the use case with explicit dependencies
-func MakeCreateUserUsecase(deps CreateUserDeps, publisher events.Publisher) CreateUserUsecase {
-	return events.EventProvider(func(deps CreateUserDeps, enqueue events.EnqueueFunc) CreateUserUsecase {
+func MakeCreateUserUsecase(
+	userRepo domain.UserRepository,
+	authRepo authDomain.AuthRepository,
+	publisher events.Publisher,
+) CreateUserUsecase {
+	return events.EventProvider(func(enqueue events.EnqueueFunc) CreateUserUsecase {
 		return func(ctx context.Context, payload CreateUserParams) (string, error) {
-			if existingUser, _ := deps.UserRepo.FindByEmail(ctx, payload.Email); existingUser != nil {
+			if existingUser, _ := userRepo.FindByEmail(ctx, payload.Email); existingUser != nil {
 				return "", sharedDomain.NewBusinessError("Email is already in use", "")
 			}
-			if existingUser, _ := deps.UserRepo.FindByPhone(ctx, payload.Phone); existingUser != nil {
+			if existingUser, _ := userRepo.FindByPhone(ctx, payload.Phone); existingUser != nil {
 				return "", sharedDomain.NewBusinessError("Phone number is already in use", "")
 			}
 
-			id, err := deps.UserRepo.GetNextId(ctx)
+			id, err := userRepo.GetNextId(ctx)
 			if err != nil {
 				return "", sharedDomain.NewBusinessError("Failed to generate user ID", "")
 			}
 
-			hashedPassword, err := deps.AuthRepo.Hash(ctx, payload.Password)
+			hashedPassword, err := authRepo.Hash(ctx, payload.Password)
 			if err != nil {
 				return "", sharedDomain.NewBusinessError("Failed to hash user password", "")
 			}
@@ -63,7 +61,7 @@ func MakeCreateUserUsecase(deps CreateUserDeps, publisher events.Publisher) Crea
 				return "", err
 			}
 
-			if err := deps.UserRepo.Store(ctx, user); err != nil {
+			if err := userRepo.Store(ctx, user); err != nil {
 				return "", sharedDomain.NewBusinessError("Error occurred while creating user account", "")
 			}
 
@@ -71,5 +69,5 @@ func MakeCreateUserUsecase(deps CreateUserDeps, publisher events.Publisher) Crea
 
 			return user.Id, nil
 		}
-	})(deps, publisher)
+	})(publisher)
 }

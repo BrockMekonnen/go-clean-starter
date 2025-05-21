@@ -10,10 +10,11 @@ import (
 )
 
 type FindUsersHandlerDeps struct {
-	FindUsers query.FindUsers
 }
 
-func MakeFindUsersHandler(deps FindUsersHandlerDeps) http.HandlerFunc {
+func FindUsersHandler(
+	findUsers query.FindUsers,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Setup paginator with defaults
 		paginator := validation.NewPaginator()
@@ -32,7 +33,7 @@ func MakeFindUsersHandler(deps FindUsersHandlerDeps) http.HandlerFunc {
 		}
 
 		// Call the use case handler
-		result, err := deps.FindUsers.Handle(r.Context(), params)
+		result, err := findUsers.Execute(r.Context(), params)
 		if err != nil {
 			respond.Error(w, err)
 			return

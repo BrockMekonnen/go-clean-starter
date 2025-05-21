@@ -19,7 +19,7 @@ func MakeFindUsers(db *gorm.DB, hashIDs hashids.HashID) query.FindUsers {
 	return &FindUsersDeps{db: db, hashIDs: hashIDs}
 }
 
-func (h *FindUsersDeps) Handle(ctx context.Context, params query.FindUsersQuery) (query.FindUsersResult, error) {
+func (h *FindUsersDeps) Execute(ctx context.Context, params query.FindUsersQuery) (query.FindUsersResult, error) {
 	var users []User
 
 	usersData := h.db.WithContext(ctx).Model(&User{})

@@ -52,5 +52,5 @@ type PaginatedQueryResult[T any] struct {
 
 // QueryHandler with context support
 type QueryHandler[P any, R any] interface {
-	Handle(ctx context.Context, payload P) (R, error)
+	Execute(ctx context.Context, payload P) (R, error)
 }
