@@ -24,7 +24,7 @@ type GenerateTokenParams struct {
 // GenerateTokenContract makes the function signature readable
 type GenerateTokenUsecase = contracts.ApplicationService[GenerateTokenParams, string]
 
-func NewGenerateTokenUsecase(deps GenerateTokenDeps) GenerateTokenUsecase {
+func MakeGenerateTokenUsecase(deps GenerateTokenDeps) GenerateTokenUsecase {
 	return func(ctx context.Context, payload GenerateTokenParams) (string, error) {
 		user, err := deps.UserRepository.FindByEmail(ctx, payload.Email)
 

@@ -4,8 +4,9 @@ import (
 	"sync"
 
 	"github.com/BrockMekonnen/go-clean-starter/core"
-	"github.com/BrockMekonnen/go-clean-starter/core/lib/logger"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/events"
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/hashids"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/logger"
 	"github.com/gorilla/mux"
 	"go.uber.org/dig"
 )
@@ -116,4 +117,15 @@ func GetHashID() hashids.HashID {
 		panic("HashID service not available in container: " + err.Error())
 	}
 	return h
+}
+
+// GetSubscriber retrieves the Subscriber service from the DI container
+func GetSubscriber() events.Subscriber {
+	var s events.Subscriber
+	if err := Get().Invoke(func(sub events.Subscriber) {
+		s = sub
+	}); err != nil {
+		panic("Subscriber service not available in container: " + err.Error())
+	}
+	return s
 }

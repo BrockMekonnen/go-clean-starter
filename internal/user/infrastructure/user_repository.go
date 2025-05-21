@@ -15,7 +15,7 @@ type UserRepository struct {
 	hashIDs hashids.HashID
 }
 
-func NewUserRepository(db *gorm.DB, hashIDs hashids.HashID) domain.UserRepository {
+func MakeUserRepository(db *gorm.DB, hashIDs hashids.HashID) domain.UserRepository {
 	return &UserRepository{db: db, hashIDs: hashIDs}
 }
 

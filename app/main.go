@@ -7,8 +7,10 @@ import (
 
 	core "github.com/BrockMekonnen/go-clean-starter/core"
 	di "github.com/BrockMekonnen/go-clean-starter/core/di"
+	events "github.com/BrockMekonnen/go-clean-starter/core/lib/events"
 	hashids "github.com/BrockMekonnen/go-clean-starter/core/lib/hashids"
 	log "github.com/BrockMekonnen/go-clean-starter/core/lib/logger"
+
 	modules "github.com/BrockMekonnen/go-clean-starter/core/modules"
 	"gorm.io/gorm"
 )
@@ -51,6 +53,23 @@ func main() {
 	})
 	if err != nil {
 		logger.Fatal("Failed to provide HashID", err)
+	}
+
+	//* Initialize Pub/Sub
+	pubsub := core.InitPubSub(logger)
+	// Register *EventEmitterPubSub directly (optional, but helpful)
+	err = container.Provide(func() *events.EventEmitterPubSub { return pubsub })
+	if err != nil {
+		logger.Fatal("Failed to provide *EventEmitterPubSub", err)
+	}
+	err = container.Provide(func() events.Subscriber { return pubsub })
+	if err != nil {
+		logger.Fatal("Failed to provide Subscriber", err)
+	}
+
+	err = container.Provide(func() events.Publisher { return pubsub })
+	if err != nil {
+		logger.Fatal("Failed to provide Publisher", err)
 	}
 
 	//* Initialize Server

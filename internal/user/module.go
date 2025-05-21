@@ -2,11 +2,13 @@ package user
 
 import (
 	"github.com/BrockMekonnen/go-clean-starter/core/di"
+	"github.com/BrockMekonnen/go-clean-starter/core/lib/events"
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/hashids"
 	authDomain "github.com/BrockMekonnen/go-clean-starter/internal/auth/domain"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/query"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/usecase"
-	"github.com/BrockMekonnen/go-clean-starter/internal/user/delivery"
+	"github.com/BrockMekonnen/go-clean-starter/internal/user/delivery/handlers"
+	"github.com/BrockMekonnen/go-clean-starter/internal/user/delivery/listeners"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/domain"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/infrastructure"
 	"go.uber.org/dig"
@@ -26,7 +28,7 @@ func RegisterUserModule() error {
 
 	//* Register this module repository
 	if err := di.ProvideWrapper("UserRepository",
-		infrastructure.NewUserRepository, dig.As(new(domain.UserRepository)),
+		infrastructure.MakeUserRepository, dig.As(new(domain.UserRepository)),
 	); err != nil {
 		return err
 	}
@@ -34,7 +36,7 @@ func RegisterUserModule() error {
 	//* Register this module query
 	if err := di.ProvideWrapper("FindUserById",
 		func(db *gorm.DB, h hashids.HashID) query.FindUserById {
-			return infrastructure.NewFindUserById(db, h)
+			return infrastructure.MakeFindUserById(db, h)
 		},
 	); err != nil {
 		return err
@@ -42,7 +44,7 @@ func RegisterUserModule() error {
 
 	if err := di.ProvideWrapper("FindUsers",
 		func(db *gorm.DB, h hashids.HashID) query.FindUsers {
-			return infrastructure.NewFindUsers(db, h)
+			return infrastructure.MakeFindUsers(db, h)
 		},
 	); err != nil {
 		return err
@@ -50,11 +52,14 @@ func RegisterUserModule() error {
 
 	//* Register this module use cases
 	if err := di.ProvideWrapper("CreateUserUsecase",
-		func(repo domain.UserRepository, authRepo authDomain.AuthRepository) usecase.CreateUserUsecase {
-			return usecase.NewCreateUserUsecase(usecase.CreateUserDeps{
-				UserRepo: repo,
-				AuthRepo: authRepo,
-			})
+		func(
+			repo domain.UserRepository,
+			authRepo authDomain.AuthRepository,
+			publisher events.Publisher,
+		) usecase.CreateUserUsecase {
+			return usecase.MakeCreateUserUsecase(
+				usecase.CreateUserDeps{UserRepo: repo, AuthRepo: authRepo}, publisher,
+			)
 		},
 	); err != nil {
 		return err
@@ -62,9 +67,7 @@ func RegisterUserModule() error {
 
 	if err := di.ProvideWrapper("DeleteUserUsecase",
 		func(repo domain.UserRepository) usecase.DeleteUserUsecase {
-			return usecase.NewDeleteUserUsecase(usecase.DeleteUserDeps{
-				UserRepo: repo,
-			})
+			return usecase.MakeDeleteUserUsecase(usecase.DeleteUserDeps{UserRepo: repo})
 		},
 	); err != nil {
 		return err
@@ -72,7 +75,7 @@ func RegisterUserModule() error {
 
 	if err := di.ProvideWrapper("GenerateTokenUsecase",
 		func(authRepo authDomain.AuthRepository, userRepo domain.UserRepository) usecase.GenerateTokenUsecase {
-			return usecase.NewGenerateTokenUsecase(usecase.GenerateTokenDeps{
+			return usecase.MakeGenerateTokenUsecase(usecase.GenerateTokenDeps{
 				AuthRepository: authRepo, UserRepository: userRepo,
 			})
 		},
@@ -126,6 +129,13 @@ func RegisterUserModule() error {
 			return delivery.FindUsersHandlerDeps{FindUsers: q}
 		},
 	); err != nil {
+		return err
+	}
+
+	//* Register Consumers
+	if err := di.Invoke(func(subscriber events.Subscriber) error {
+		return listeners.MakeSendOTPEventListener(subscriber)(listeners.OTPHandlerDeps{})
+	}); err != nil {
 		return err
 	}
 

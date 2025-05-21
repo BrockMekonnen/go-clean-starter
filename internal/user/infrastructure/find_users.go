@@ -15,7 +15,7 @@ type FindUsersDeps struct {
 }
 
 // NewFindUsersHandler
-func NewFindUsers(db *gorm.DB, hashIDs hashids.HashID) query.FindUsers {
+func MakeFindUsers(db *gorm.DB, hashIDs hashids.HashID) query.FindUsers {
 	return &FindUsersDeps{db: db, hashIDs: hashIDs}
 }
 

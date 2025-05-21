@@ -16,7 +16,7 @@ type FindUserByIdHandler struct {
 }
 
 // NewFindUserByIdHandler
-func NewFindUserById(db *gorm.DB, hashIDs hashids.HashID) query.FindUserById {
+func MakeFindUserById(db *gorm.DB, hashIDs hashids.HashID) query.FindUserById {
 	return &FindUserByIdHandler{db: db, hashIDs: hashIDs}
 }
 

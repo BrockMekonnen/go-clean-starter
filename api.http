@@ -1,4 +1,4 @@
-@token = Bearer 
+@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc4NTcwMjksInNjb3BlIjpbInVzZXIiXSwidWlkIjoia2VQWHJnbjUifQ.cm3r9AJfvsNaq-l-FkJLqXQMewz98Ba6ekDv0jWdJUY
 @baseUrl = http://0.0.0.0:9090
 
 GET {{baseUrl}}/status
@@ -13,7 +13,7 @@ POST {{baseUrl}}/api/users/login
 Content-Type: application/json
 
 {
-	"email": "janedoe3@test.com",
+	"email": "janedoe@test.com",
 	"password": "test@test"
 }
 
@@ -25,7 +25,7 @@ Content-Type: application/json
 	"firstName": "Jane",
 	"lastName": "Doe",
 	"phone": "+1 123 456 7894",
-	"email": "janedoe5",
+	"email": "janedoe4@test.com",
 	"password": "test@test",
 	"IsTermAndConditionAgreed": true
 }
@@ -36,17 +36,17 @@ Content-Type: application/json
 Authorization: {{token}}
 
 ###
-GET {{baseUrl}}/api/users?limit=10&page=1
-Content-Type: application/json
-Authorization: {{token}}
-
-###
 GET {{baseUrl}}/api/users/NmPLNgv8
 Content-Type: application/json
 Authorization: {{token}}
 
 ###
-DELETE {{baseUrl}}/api/users/bo4l3gBv
+GET {{baseUrl}}/api/users?limit=10&page=1
+Content-Type: application/json
+Authorization: {{token}}
+
+###
+DELETE {{baseUrl}}/api/users/wo4rwPBa
 Content-Type: application/json
 Authorization: {{token}}
 

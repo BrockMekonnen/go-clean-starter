@@ -17,7 +17,7 @@ type DeleteUserDeps struct {
 }
 
 // NewDeleteUserUsecase implements the contract
-func NewDeleteUserUsecase(deps DeleteUserDeps) DeleteUserUsecase {
+func MakeDeleteUserUsecase(deps DeleteUserDeps) DeleteUserUsecase {
 	return func(ctx context.Context, id string) (contracts.Void, error) {
 		err := deps.UserRepo.DeleteUser(ctx, id)
 		if err != nil {
