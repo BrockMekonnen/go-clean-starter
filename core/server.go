@@ -24,6 +24,7 @@ type ServerRegistry struct {
 	RootRouter *mux.Router
 	ApiRouter  *mux.Router
 	AuthRouter *mux.Router
+	Started    chan struct{} // <- add this
 }
 
 // NewServer initializes and returns the HTTP server
@@ -87,6 +88,7 @@ func NewServer(config AppConfig, container *dig.Container, logger logger.Log) (*
 		RootRouter: rootRouter,
 		ApiRouter:  apiRouter,
 		AuthRouter: authRouter,
+		Started:    make(chan struct{}),
 	}, shutdown
 }
 
@@ -94,6 +96,10 @@ func NewServer(config AppConfig, container *dig.Container, logger logger.Log) (*
 func StartServer(server *ServerRegistry, logger logger.Log) {
 	go func() {
 		logger.Infof("Starting server on %s", server.HttpServer.Addr)
+
+		// Notify main.go that the server has started
+		close(server.Started)
+
 		if err := server.HttpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Fatalf("Could not start server: %v", err)
 		}

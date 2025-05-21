@@ -3,8 +3,8 @@ package hashids
 import (
 	"errors"
 
-	"github.com/speps/go-hashids/v2"
 	"github.com/BrockMekonnen/go-clean-starter/core"
+	"github.com/speps/go-hashids/v2"
 )
 
 // HashID defines the interface for encoding and decoding IDs.

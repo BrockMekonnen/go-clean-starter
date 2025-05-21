@@ -13,7 +13,7 @@ func InitPubSub(log *logger.Log) *events.EventEmitterPubSub {
 		log.Fatal("Failed to start pubsub", err)
 	}
 
-	log.Info("PubSub Successfully Started.")
+	log.Info("PubSub initialized successfully.")
 
 	return pubsub
 }

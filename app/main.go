@@ -80,10 +80,13 @@ func main() {
 	}
 
 	//* Register internal modules
-	modules.RegisterInternalModules()
+	modules.MakeInternalModules(*logger)
 
 	//* Start Server
 	core.StartServer(server, *logger)
+
+	<-server.Started
+	logger.Info("Application Started")
 
 	//* Graceful Shutdown Handling
 	shutdownChan := make(chan os.Signal, 1)
