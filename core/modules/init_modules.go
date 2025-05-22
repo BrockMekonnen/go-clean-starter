@@ -3,8 +3,6 @@ package core
 import (
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/logger"
 	"github.com/BrockMekonnen/go-clean-starter/internal/auth"
-	"github.com/BrockMekonnen/go-clean-starter/internal/comment"
-	"github.com/BrockMekonnen/go-clean-starter/internal/post"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user"
 )
 
@@ -16,14 +14,6 @@ func MakeInternalModules(logger logger.Log) {
 	}
 
 	if err := user.MakeUserModule(); err != nil {
-		logger.Fatal("Failed to register user module:", err)
-	}
-
-	if err := comment.MakeCommentModule(); err != nil {
-		logger.Fatal("Failed to register user module:", err)
-	}
-
-	if err := post.MakePostModule(); err != nil {
 		logger.Fatal("Failed to register user module:", err)
 	}
 

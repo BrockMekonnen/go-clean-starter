@@ -1,4 +1,4 @@
-@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDgwMTc2ODAsInNjb3BlIjpbInVzZXIiXSwidWlkIjoia2VQWHJnbjUifQ.v1p0caJ99d6j_5o5NcOcpJC4ji4qGBI1xHXG1G1alFc
+@token = Bearer 
 @baseUrl = http://0.0.0.0:9090
 
 GET {{baseUrl}}/status
@@ -50,7 +50,6 @@ Authorization: {{token}}
 DELETE {{baseUrl}}/api/users/bo4l3gBv
 Content-Type: application/json
 Authorization: {{token}}
-
 
 
 ###
