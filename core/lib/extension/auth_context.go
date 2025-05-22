@@ -1,5 +1,10 @@
 package extension
 
+import (
+	"context"
+	"errors"
+)
+
 type contextKey string
 
 const (
@@ -7,14 +12,21 @@ const (
 )
 
 type AuthContext struct {
-	IsAuthenticated bool
-	IsAuthorized    bool
-	IsInjected      bool
-	Credentials     struct {
+	Credentials struct {
 		UID   string
 		Scope []string
 	}
 	Artifacts struct {
 		AccessToken string
 	}
+}
+
+func GetAuthContextData(ctx context.Context) (AuthContext, error) {
+	authCtx, ok := ctx.Value(AuthContextKey).(AuthContext)
+	if !ok {
+		return AuthContext{}, errors.New("unauthorized: missing auth context")
+	}
+
+	// Extract UID
+	return authCtx, nil
 }

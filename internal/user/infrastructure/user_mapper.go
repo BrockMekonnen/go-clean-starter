@@ -10,15 +10,22 @@ import (
 	"github.com/jackc/pgtype"
 )
 
-type userMapper struct{}
+type UserMapper struct{}
 
-var _ contracts.DataMapper[domain.User, User] = (*userMapper)(nil)
+var _ contracts.DataMapper[domain.User, User] = (*UserMapper)(nil)
+
+func (m *UserMapper) ToEntity(schema User) (domain.User, error) {
+	return ToEntity(schema)
+}
+
+func (m *UserMapper) ToData(user domain.User) (User, error) {
+	return ToData(user)
+}
 
 func ToEntity(schema User) (domain.User, error) {
 	hashids := di.GetHashID()
 	hashedId, err := hashids.EncodeID(schema.Id)
 	if err != nil {
-		fmt.Println("hashids:err: ", err)
 		return domain.User{}, err
 	}
 
@@ -31,7 +38,7 @@ func ToEntity(schema User) (domain.User, error) {
 	}
 
 	return domain.User{
-		Id:        hashedId,
+		ID:        hashedId,
 		FirstName: schema.FirstName,
 		LastName:  schema.LastName,
 		Phone:     schema.Phone,
@@ -46,7 +53,7 @@ func ToEntity(schema User) (domain.User, error) {
 
 func ToData(user domain.User) (User, error) {
 	hashids := di.GetHashID()
-	id, err := hashids.DecodeID(user.Id)
+	id, err := hashids.DecodeID(user.ID)
 
 	if err != nil {
 		return User{}, err
@@ -71,13 +78,4 @@ func ToData(user domain.User) (User, error) {
 		UpdatedAt: user.UpdatedAt,
 		Version:   user.Version,
 	}, nil
-}
-
-// * Interface implementation with error handling
-func (m *userMapper) ToEntity(schema User) (domain.User, error) {
-	return ToEntity(schema)
-}
-
-func (m *userMapper) ToData(user domain.User) (User, error) {
-	return ToData(user)
 }

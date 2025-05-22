@@ -1,4 +1,4 @@
-@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc5MDk3NjksInNjb3BlIjpbInVzZXIiXSwidWlkIjoia2VQWHJnbjUifQ.iJnl6JjUMnKl7EHgLtJPoZI7iTBoSOj0KcGba4KuybI
+@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDgwMTc2ODAsInNjb3BlIjpbInVzZXIiXSwidWlkIjoia2VQWHJnbjUifQ.v1p0caJ99d6j_5o5NcOcpJC4ji4qGBI1xHXG1G1alFc
 @baseUrl = http://0.0.0.0:9090
 
 GET {{baseUrl}}/status
@@ -22,8 +22,8 @@ Content-Type: application/json
 {
 	"firstName": "Jane",
 	"lastName": "Doe",
-	"phone": "+1 123 456 7896",
-	"email": "janedoe6@test.com",
+	"phone": "+1 123 456 7895",
+	"email": "janedoe5@test.com",
 	"password": "test@test",
 	"IsTermAndConditionAgreed": true
 }
@@ -33,10 +33,7 @@ GET {{baseUrl}}/api/users/me
 Content-Type: application/json
 Authorization: {{token}}
 
-###
-GET {{baseUrl}}/api/users/kePXrgn5
-Content-Type: application/json
-Authorization: {{token}}
+
 
 ###
 GET {{baseUrl}}/api/users?limit=10&page=1
@@ -44,7 +41,43 @@ Content-Type: application/json
 Authorization: {{token}}
 
 ###
-DELETE {{baseUrl}}/api/users/bQ7WRPe9
+GET {{baseUrl}}/api/users/kePXrgn5
 Content-Type: application/json
 Authorization: {{token}}
 
+
+###
+DELETE {{baseUrl}}/api/users/bo4l3gBv
+Content-Type: application/json
+Authorization: {{token}}
+
+
+
+###
+GET {{baseUrl}}/api/posts?limit=10&page=1
+Content-Type: application/json
+Authorization: {{token}}
+
+###
+POST {{baseUrl}}/api/posts
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "title": "Understanding the Go Clean Architecture",
+  "content": "In this post, we explore how to implement clean architecture principles in a Go web application using layered structure, dependency inversion, and modular boundaries."
+}
+
+###
+GET {{baseUrl}}/api/posts/kePXrgn5
+Content-Type: application/json
+Authorization: {{token}}
+
+###
+POST {{baseUrl}}/api/posts/kePXrgn5/comments
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "body": "Great explanation! The section about dependency inversion really clarified things for me. Looking forward to more posts like this."
+}

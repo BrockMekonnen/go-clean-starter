@@ -4,7 +4,7 @@ import (
 	"github.com/BrockMekonnen/go-clean-starter/core/di"
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/events"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/usecase"
-	"github.com/BrockMekonnen/go-clean-starter/internal/user/delivery/listeners"
+	"github.com/BrockMekonnen/go-clean-starter/internal/user/interface/listeners"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/infrastructure"
 )
 
@@ -28,7 +28,6 @@ func MakeUserModule() error {
 	if err := di.ProvideWrapper("FindUserById", infrastructure.MakeFindUserById); err != nil {
 		return err
 	}
-
 	if err := di.ProvideWrapper("FindUsers", infrastructure.MakeFindUsers); err != nil {
 		return err
 	}

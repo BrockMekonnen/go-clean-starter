@@ -40,7 +40,7 @@ func (h *FindUserByIdHandler) Execute(ctx context.Context, idStr string) (query.
 		return query.FindUserByIdResult{}, err // or wrap the error properly
 	}
 
-	userDTO := query.UserDTO{
+	userDTO := query.FindUserByIdDTO{
 		Id:        hashedId,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,

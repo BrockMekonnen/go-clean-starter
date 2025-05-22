@@ -15,8 +15,8 @@ type User struct {
 	Email     string       `gorm:"size:255;not null;unique;column:email"`
 	Password  string       `gorm:"size:255;not null;column:password"`
 	Roles     pgtype.JSONB `gorm:"type:jsonb;not null;column:roles"`
-	CreatedAt time.Time    `gorm:"autoCreateTime;column:created_at"`
-	UpdatedAt time.Time    `gorm:"autoUpdateTime;column:updated_at"`
+	CreatedAt time.Time    `gorm:"type:timestamp;not null;column:created_at"`
+	UpdatedAt time.Time    `gorm:"type:timestamp;not null;column:updated_at"`
 	Version   int          `gorm:"default:1;column:version"`
 }
 

@@ -4,7 +4,7 @@ import (
 	"github.com/BrockMekonnen/go-clean-starter/core/di"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/query"
 	"github.com/BrockMekonnen/go-clean-starter/internal/user/app/usecase"
-	"github.com/BrockMekonnen/go-clean-starter/internal/user/delivery/handlers"
+	"github.com/BrockMekonnen/go-clean-starter/internal/user/interface/handlers"
 )
 
 func MakeUserRoutes() {
@@ -12,15 +12,15 @@ func MakeUserRoutes() {
 	authRouter := di.GetAuthRouter()
 
 	//* Get handlers
-	createHandler := delivery.CreateUserHandler(di.MustResolve[usecase.CreateUserUsecase]())
-	findUsersHandler := delivery.FindUsersHandler(di.MustResolve[query.FindUsers]())
-	deleteHandler := delivery.DeleteUserHandler(di.MustResolve[usecase.DeleteUserUsecase]())
-	getUserHandler := delivery.GetUserHandler(di.MustResolve[query.FindUserById]())
-	getMeHandler := delivery.GetMeHandler(di.MustResolve[query.FindUserById]())
-	generateHandler := delivery.GenerateTokenHandler(di.MustResolve[usecase.GenerateTokenUsecase]())
+	createUserHandler := handlers.CreateUserHandler(di.MustResolve[usecase.CreateUserUsecase]())
+	findUsersHandler := handlers.FindUsersHandler(di.MustResolve[query.FindUsers]())
+	deleteHandler := handlers.DeleteUserHandler(di.MustResolve[usecase.DeleteUserUsecase]())
+	getUserHandler := handlers.GetUserHandler(di.MustResolve[query.FindUserById]())
+	getMeHandler := handlers.GetMeHandler(di.MustResolve[query.FindUserById]())
+	generateHandler := handlers.GenerateTokenHandler(di.MustResolve[usecase.GenerateTokenUsecase]())
 
 	//* Unauth routes
-	apiRouter.HandleFunc("/users", createHandler).Methods("POST")
+	apiRouter.HandleFunc("/users", createUserHandler).Methods("POST")
 	apiRouter.HandleFunc("/users/login", generateHandler).Methods("POST")
 
 	//* Auth Routes
@@ -28,5 +28,4 @@ func MakeUserRoutes() {
 	authRouter.HandleFunc("/users/me", getMeHandler).Methods("GET")
 	authRouter.HandleFunc("/users/{id}", deleteHandler).Methods("DELETE")
 	authRouter.HandleFunc("/users/{id}", getUserHandler).Methods("GET")
-
 }

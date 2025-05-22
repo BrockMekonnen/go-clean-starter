@@ -50,7 +50,7 @@ func MakeCreateUserUsecase(
 			}
 
 			user, err := domain.NewUser(domain.UserProps{
-				Id:        id,
+				ID:        id,
 				FirstName: payload.FirstName,
 				LastName:  payload.LastName,
 				Phone:     payload.Phone,
@@ -67,7 +67,7 @@ func MakeCreateUserUsecase(
 
 			enqueue(userEvents.NewSendOTPEvent(user.Email, userEvents.Verification))
 
-			return user.Id, nil
+			return user.ID, nil
 		}
 	})(publisher)
 }

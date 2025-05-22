@@ -6,7 +6,7 @@ import (
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/contracts"
 )
 
-type UserDTO struct {
+type FindUserByIdDTO struct {
 	Id        string    `json:"id"`
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
@@ -17,6 +17,6 @@ type UserDTO struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type FindUserByIdResult = contracts.QueryResult[UserDTO]
+type FindUserByIdResult = contracts.QueryResult[FindUserByIdDTO]
 
 type FindUserById = contracts.QueryHandler[string, FindUserByIdResult]

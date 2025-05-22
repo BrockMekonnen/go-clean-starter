@@ -20,7 +20,7 @@ Each module follows a structured approach with the following subdirectories:
 - domain         # Entity definitions and business rules
 - app            # Business logic and application use cases + Query interfaces
 - infrastructure # Database, external APIs, etc.
-- delivery       # HTTP handlers and middleware
+- interface       # HTTP handlers and middleware
 ```
 
 ## Available Modules

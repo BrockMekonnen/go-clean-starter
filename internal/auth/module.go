@@ -3,9 +3,9 @@ package auth
 import (
 	"github.com/BrockMekonnen/go-clean-starter/core/di"
 	"github.com/BrockMekonnen/go-clean-starter/internal/auth/app/usecase"
-	"github.com/BrockMekonnen/go-clean-starter/internal/auth/delivery"
 	"github.com/BrockMekonnen/go-clean-starter/internal/auth/domain"
 	"github.com/BrockMekonnen/go-clean-starter/internal/auth/infrastructure"
+	"github.com/BrockMekonnen/go-clean-starter/internal/auth/interface/handlers"
 )
 
 func MakeAuthModule() error {
@@ -27,7 +27,7 @@ func MakeAuthModule() error {
 	}
 
 	//* Add Verify Token Middleware
-	verifyTokenMiddleware := delivery.VerifyTokenMiddleware(di.MustResolve[usecase.VerifyTokenUsecase]())
+	verifyTokenMiddleware := handlers.VerifyTokenMiddleware(di.MustResolve[usecase.VerifyTokenUsecase]())
 	authRouter.Use(verifyTokenMiddleware)
 
 	logger.Info("Auth module initialized successfully.")

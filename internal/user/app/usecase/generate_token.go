@@ -35,7 +35,7 @@ func MakeGenerateTokenUsecase(
 		}
 
 		token, err := authRepo.Generate(ctx, domain.Credentials{
-			Uid: user.Id, Scope: user.Roles})
+			Uid: user.ID, Scope: user.Roles})
 
 		if err != nil {
 			return "", sharedDomain.NewBusinessError("Failed to generate authentication token.", "")
