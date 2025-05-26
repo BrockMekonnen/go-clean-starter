@@ -19,9 +19,17 @@ type FindPostsDTO struct {
 	Author   UserDTO    `json:"user"`
 	State    string     `json:"state"`
 	PostedAt *time.Time `json:"postedAt"`
+	CreatedAt *time.Time `json:"createdAt"`
 }
 
-type FindPostsQuery = contracts.PaginatedQuery[contracts.Void]
+type FindPostsFilter struct {
+	UserId           string
+	Title            string
+	PublishedBetween []time.Time
+	PublishedOnly    bool
+}
+
+type FindPostsQuery = contracts.PaginatedQuery[FindPostsFilter]
 type FindPostsResult = contracts.PaginatedQueryResult[[]FindPostsDTO]
 
 type FindPosts = contracts.QueryHandler[FindPostsQuery, FindPostsResult]

@@ -22,14 +22,46 @@ func MakeFindPosts(db *gorm.DB, hashIDs hashids.HashID) query.FindPosts {
 func (f *FindPostsDeps) Execute(ctx context.Context, params query.FindPostsQuery) (query.FindPostsResult, error) {
 	var posts []Post
 
-	postsData := f.db.WithContext(ctx).Model(&Post{}).Preload("User")
+	postsData := f.db.WithContext(ctx).
+		Model(&Post{}).
+		Where("deleted = ?", false).
+		Preload("User")
 
-	// Count total posts
+	// Filter by UserId
+	if params.Filter.UserId != "" {
+		userId, err := f.hashIDs.DecodeID(params.Filter.UserId)
+		if err != nil {
+			return query.FindPostsResult{}, err
+		}
+		postsData = postsData.Where("user_id = ?", userId)
+	}
+
+	// Filter by Title (case-insensitive partial match)
+	if params.Filter.Title != "" {
+		postsData = postsData.Where("LOWER(title) LIKE ?", "%"+params.Filter.Title+"%")
+	}
+
+	if params.Filter.PublishedOnly {
+		postsData = postsData.Where("state = ?", "PUBLISHED")
+	}
+
+	// Filter by PublishedBetween (expects exactly 2 values: start and end)
+	if len(params.Filter.PublishedBetween) == 2 {
+		start := params.Filter.PublishedBetween[0]
+		end := params.Filter.PublishedBetween[1]
+		postsData = postsData.Where("posted_at BETWEEN ? AND ?", start, end)
+	}
+
+	// Sort by created_at DESC
+	postsData = postsData.Order("created_at DESC")
+
+	// Count total
 	var totalElements int64
 	if err := postsData.Count(&totalElements).Error; err != nil {
 		return query.FindPostsResult{}, err
 	}
 
+	// Pagination
 	page := params.Pagination.Page
 	pageSize := params.Pagination.PageSize
 	offset := (page - 1) * pageSize
@@ -38,6 +70,7 @@ func (f *FindPostsDeps) Execute(ctx context.Context, params query.FindPostsQuery
 		return query.FindPostsResult{}, err
 	}
 
+	// Transform to DTO
 	convertedPosts := make([]query.FindPostsDTO, len(posts))
 	for i, post := range posts {
 		hashedId, _ := f.hashIDs.EncodeID(post.ID)
@@ -53,12 +86,14 @@ func (f *FindPostsDeps) Execute(ctx context.Context, params query.FindPostsQuery
 			},
 			State:    post.State,
 			PostedAt: post.PublishedAt,
+			CreatedAt: &post.CreatedAt,
 		}
 	}
 
-	totalPages := int((totalElements + int64(pageSize) - 1) / int64(pageSize)) // ceil
+	// Return result
+	totalPages := int((totalElements + int64(pageSize) - 1) / int64(pageSize))
 
-	result := query.FindPostsResult{
+	return query.FindPostsResult{
 		Data: convertedPosts,
 		Page: contracts.ResultPage{
 			Current:       page,
@@ -68,7 +103,5 @@ func (f *FindPostsDeps) Execute(ctx context.Context, params query.FindPostsQuery
 			First:         page == 1,
 			Last:          page == totalPages,
 		},
-	}
-
-	return result, nil
+	}, nil
 }

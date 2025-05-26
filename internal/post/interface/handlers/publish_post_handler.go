@@ -31,6 +31,6 @@ func PublishPostHandler(
 			respond.Error(w, err)
 		}
 
-		respond.Success(w, http.StatusOK, nil)
+		respond.SuccessWithData(w, http.StatusOK, postId)
 	}
 }

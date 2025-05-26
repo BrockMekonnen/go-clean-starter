@@ -17,10 +17,12 @@ func MakePostRoutes() {
 	updatePostHandler := handlers.UpdatePostHandler(di.MustResolve[usecase.UpdatePostUsecase]())
 	findPostByIdHandler := handlers.FindPostByIdHandler(di.MustResolve[query.FindPostById]())
 	findPostsHandler := handlers.FindPostsHandler(di.MustResolve[query.FindPosts]())
+	findMyPostsHandler := handlers.FindMyPostsHandler(di.MustResolve[query.FindPosts]())
 
 	//* Register In Auth Routes
 	authRouter.HandleFunc("/posts", createPostHandler).Methods("POST")
 	authRouter.HandleFunc("/posts", findPostsHandler).Methods("GET")
+	authRouter.HandleFunc("/posts/me", findMyPostsHandler).Methods("GET")
 	authRouter.HandleFunc("/posts/{id}", findPostByIdHandler).Methods("GET")
 	authRouter.HandleFunc("/posts/{id}", deletePostHandler).Methods("DELETE")
 	authRouter.HandleFunc("/posts/{id}", updatePostHandler).Methods("PATCH")

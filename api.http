@@ -59,6 +59,11 @@ Content-Type: application/json
 Authorization: {{token}}
 
 ###
+GET {{baseUrl}}/api/posts/me?limit=15&page=1
+Content-Type: application/json
+Authorization: {{token}}
+
+###
 POST {{baseUrl}}/api/posts
 Content-Type: application/json
 Authorization: {{token}}
@@ -81,3 +86,13 @@ Authorization: {{token}}
 {
   "body": "Great explanation! The section about dependency inversion really clarified things for me. Looking forward to more posts like this."
 }
+
+###
+PATCH {{baseUrl}}/api/posts/publish/kePXrgn5
+Content-Type: application/json
+Authorization: {{token}}
+
+###
+DELETE {{baseUrl}}/api/posts/v17864Yr
+Content-Type: application/json
+Authorization: {{token}}

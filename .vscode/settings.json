@@ -4,6 +4,7 @@
 		"Debugf",
 		"gorm",
 		"hashids",
+		"ILIKE",
 		"Infof",
 		"labstack",
 		"logrus",
