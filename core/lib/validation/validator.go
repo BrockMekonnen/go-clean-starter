@@ -43,12 +43,11 @@ func (v *Validator) GetBody(r *http.Request) (interface{}, error) {
 		return body, nil
 	}
 
-	body := v.schemas.Body
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(v.schemas.Body); err != nil {
 		return nil, err
 	}
 
-	if err := v.validate.Struct(body); err != nil {
+	if err := v.validate.Struct(v.schemas.Body); err != nil {
 		if verr, ok := err.(validator.ValidationErrors); ok {
 			msg := formatValidationError(verr[0])
 			return nil, errors.NewValidationError(msg, "body", verr)
@@ -56,19 +55,36 @@ func (v *Validator) GetBody(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	return body, nil
+	return v.schemas.Body, nil
 }
 
-func (v *Validator) GetParams(r *http.Request) (map[string]string, error) {
+func (v *Validator) GetParams(r *http.Request) (interface{}, error) {
 	vars := mux.Vars(r)
 	if v.schemas.Params == nil {
 		return vars, nil
 	}
-	//TODO Optional: Add validation logic for params here
-	return vars, nil
+
+	data, err := json.Marshal(vars)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal(data, v.schemas.Params); err != nil {
+		return nil, err
+	}
+
+	if err := v.validate.Struct(v.schemas.Params); err != nil {
+		if verr, ok := err.(validator.ValidationErrors); ok {
+			msg := formatValidationError(verr[0])
+			return nil, errors.NewValidationError(msg, "params", verr)
+		}
+		return nil, err
+	}
+
+	return v.schemas.Params, nil
 }
 
-func (v *Validator) GetQuery(r *http.Request) (map[string]interface{}, error) {
+func (v *Validator) GetQuery(r *http.Request) (interface{}, error) {
 	query := make(map[string]interface{})
 	q := r.URL.Query()
 
@@ -89,18 +105,87 @@ func (v *Validator) GetQuery(r *http.Request) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	querySchema := v.schemas.Query
-	if err := json.Unmarshal(data, &querySchema); err != nil {
+	if err := json.Unmarshal(data, v.schemas.Query); err != nil {
 		return nil, err
 	}
 
-	if err := v.validate.Struct(querySchema); err != nil {
+	if err := v.validate.Struct(v.schemas.Query); err != nil {
 		if verr, ok := err.(validator.ValidationErrors); ok {
-			msg := formatValidationError(verr[0]) // Get cleaned message
+			msg := formatValidationError(verr[0])
 			return nil, errors.NewValidationError(msg, "query", verr)
 		}
 		return nil, err
 	}
 
-	return query, nil
+	return v.schemas.Query, nil
+}
+
+func (v *Validator) BindAndValidateQuery(r *http.Request, target interface{}) error {
+	q := r.URL.Query()
+	query := make(map[string]interface{})
+
+	for key, values := range q {
+		if len(values) == 1 {
+			query[key] = values[0]
+		} else {
+			query[key] = values
+		}
+	}
+
+	data, err := json.Marshal(query)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(data, target); err != nil {
+		return err
+	}
+
+	if err := v.validate.Struct(target); err != nil {
+		if verr, ok := err.(validator.ValidationErrors); ok {
+			msg := formatValidationError(verr[0])
+			return errors.NewValidationError(msg, "query", verr)
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (v *Validator) BindAndValidateBody(r *http.Request, target interface{}) error {
+	if err := json.NewDecoder(r.Body).Decode(target); err != nil {
+		return err
+	}
+
+	if err := v.validate.Struct(target); err != nil {
+		if verr, ok := err.(validator.ValidationErrors); ok {
+			msg := formatValidationError(verr[0])
+			return errors.NewValidationError(msg, "body", verr)
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (v *Validator) BindAndValidateParams(r *http.Request, target interface{}) error {
+	vars := mux.Vars(r)
+	data, err := json.Marshal(vars)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(data, target); err != nil {
+		return err
+	}
+
+	if err := v.validate.Struct(target); err != nil {
+		if verr, ok := err.(validator.ValidationErrors); ok {
+			msg := formatValidationError(verr[0])
+			return errors.NewValidationError(msg, "params", verr)
+		}
+		return err
+	}
+
+	return nil
 }

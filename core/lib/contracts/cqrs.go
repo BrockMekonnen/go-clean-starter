@@ -9,14 +9,14 @@ type Sort struct {
 
 type Pagination struct {
 	Page     int `json:"page"`
-	PageSize int `json:"page_size"`
+	PageSize int `json:"pageSize"`
 }
 
 type ResultPage struct {
 	Current       int  `json:"current"`
-	PageSize      int  `json:"page_size"`
-	TotalPages    int  `json:"total_pages"`
-	TotalElements int  `json:"total_elements"`
+	PageSize      int  `json:"pageSize"`
+	TotalPages    int  `json:"totalPages"`
+	TotalElements int  `json:"totalElements"`
 	First         bool `json:"first"`
 	Last          bool `json:"last"`
 }
