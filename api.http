@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 @token = Bearer 
-=======
-@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDg0MTM2NTYsInNjb3BlIjpbInVzZXIiXSwidWlkIjoia2VQWHJnbjUifQ.41QGJz4iVWq1_RwgeNE6yiNgsDtPaZpBEMDr33sYJX0
->>>>>>> clean-starter-with-post-module
 @baseUrl = http://0.0.0.0:9090
 
 GET {{baseUrl}}/status
