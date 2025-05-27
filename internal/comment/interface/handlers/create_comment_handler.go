@@ -21,20 +21,16 @@ func CreateCommentHandler(
 	createComment usecase.CreateCommentUsecase,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		validator := validation.NewValidator(validation.ValidationSchemas{
-			Body:   &createCommentBody{},
-			Params: &createCommentParams{},
-		})
+		validator := validation.NewValidator(validation.ValidationSchemas{})
 
-		body, err := validator.GetBody(r)
-		if err != nil {
+		body := &createCommentBody{}
+		if err := validator.BindAndValidateBody(r, body); err != nil {
 			respond.Error(w, err)
 			return
 		}
-		req := body.(*createCommentBody)
 
-		params, err := validator.GetParams(r)
-		if err != nil {
+		params := &createCommentParams{}
+		if err := validator.BindAndValidateParams(r, params); err != nil {
 			respond.Error(w, err)
 			return
 		}
@@ -47,8 +43,8 @@ func CreateCommentHandler(
 
 		result, err := createComment(r.Context(), usecase.CreateCommentParams{
 			UserId: authCtx.Credentials.UID,
-			PostId: params["postId"],
-			Body:   req.Body,
+			PostId: params.PostId,
+			Body:   body.Body,
 		})
 
 		if err != nil {

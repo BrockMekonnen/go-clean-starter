@@ -52,14 +52,14 @@ Content-Type: application/json
 Authorization: {{token}}
 
 
-
 ###
 GET {{baseUrl}}/api/posts?limit=10&page=1
+# GET {{baseUrl}}/api/posts?limit=10&page=1&publishedStart=2024-01-01T00:00:00Z&publishedEnd=2025-06-05T23:59:59Z
 Content-Type: application/json
 Authorization: {{token}}
 
 ###
-GET {{baseUrl}}/api/posts/me?limit=15&page=1
+GET {{baseUrl}}/api/me/posts?limit=15&page=1
 Content-Type: application/json
 Authorization: {{token}}
 
@@ -74,7 +74,16 @@ Authorization: {{token}}
 }
 
 ###
-GET {{baseUrl}}/api/posts/kePXrgn5
+PATCH {{baseUrl}}/api/posts/2y7Ybgw8
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "title": "Quick Tips for Better Productivity!"
+}
+
+###
+GET {{baseUrl}}/api/posts/2y7Ybgw8
 Content-Type: application/json
 Authorization: {{token}}
 
@@ -88,11 +97,11 @@ Authorization: {{token}}
 }
 
 ###
-PATCH {{baseUrl}}/api/posts/publish/kePXrgn5
+PATCH {{baseUrl}}/api/posts/wo4rwPBa/publish
 Content-Type: application/json
 Authorization: {{token}}
 
 ###
-DELETE {{baseUrl}}/api/posts/v17864Yr
+DELETE {{baseUrl}}/api/posts/oJ7LV89M
 Content-Type: application/json
 Authorization: {{token}}

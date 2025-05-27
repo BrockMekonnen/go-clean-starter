@@ -30,7 +30,7 @@ func FindMyPostsHandler(
 		}
 
 		params := query.FindPostsQuery{
-			Filter:     query.FindPostsFilter{UserId: authCtx.Credentials.UID},
+			Filter:     query.FindPostsFilter{UserId: authCtx.Credentials.UID, PublishedOnly: false},
 			Pagination: contracts.Pagination{Page: page, PageSize: pageSize},
 		}
 

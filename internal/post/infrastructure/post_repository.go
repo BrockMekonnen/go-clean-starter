@@ -74,14 +74,14 @@ func (r *PostRepository) Update(ctx context.Context, post *domain.Post) error {
 	}
 
 	result := r.db.WithContext(ctx).Model(&Post{}).
-		Where("id = ? AND version = ?", data.ID, data.Version).
+		Where("id = ?", data.ID).
 		Updates(data)
 	if result.Error != nil {
 		return result.Error
 	}
 
 	if result.RowsAffected == 0 {
-		return errors.New("optimistic lock failed or user not found")
+		return errors.New("optimistic lock failed or post not found")
 	}
 
 	return nil

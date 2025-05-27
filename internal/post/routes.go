@@ -11,20 +11,20 @@ func MakePostRoutes() {
 	authRouter := di.GetAuthRouter()
 
 	//* Get Handlers
-	createPostHandler := handlers.CreatePostHandler(di.MustResolve[usecase.CreatePostUsecase]())
+	createPostHandler := handlers.CreatePostHandler(di.MustResolve[usecase.CreatePostUsecase](), di.MustResolve[query.FindPostById]())
+	publishPostHandler := handlers.PublishPostHandler(di.MustResolve[usecase.PublishPostUsecase](), di.MustResolve[query.FindPostById]())
+	updatePostHandler := handlers.UpdatePostHandler(di.MustResolve[usecase.UpdatePostUsecase](), di.MustResolve[query.FindPostById]())
 	deletePostHandler := handlers.DeletePostHandler(di.MustResolve[usecase.DeletePostUsecase]())
-	publishPostHandler := handlers.PublishPostHandler(di.MustResolve[usecase.PublishPostUsecase]())
-	updatePostHandler := handlers.UpdatePostHandler(di.MustResolve[usecase.UpdatePostUsecase]())
 	findPostByIdHandler := handlers.FindPostByIdHandler(di.MustResolve[query.FindPostById]())
-	findPostsHandler := handlers.FindPostsHandler(di.MustResolve[query.FindPosts]())
 	findMyPostsHandler := handlers.FindMyPostsHandler(di.MustResolve[query.FindPosts]())
+	findPostsHandler := handlers.FindPostsHandler(di.MustResolve[query.FindPosts]())
 
 	//* Register In Auth Routes
 	authRouter.HandleFunc("/posts", createPostHandler).Methods("POST")
 	authRouter.HandleFunc("/posts", findPostsHandler).Methods("GET")
-	authRouter.HandleFunc("/posts/me", findMyPostsHandler).Methods("GET")
+	authRouter.HandleFunc("/me/posts", findMyPostsHandler).Methods("GET")
 	authRouter.HandleFunc("/posts/{id}", findPostByIdHandler).Methods("GET")
 	authRouter.HandleFunc("/posts/{id}", deletePostHandler).Methods("DELETE")
 	authRouter.HandleFunc("/posts/{id}", updatePostHandler).Methods("PATCH")
-	authRouter.HandleFunc("/posts/publish/{id}", publishPostHandler).Methods("PATCH")
+	authRouter.HandleFunc("/posts/{id}/publish", publishPostHandler).Methods("PATCH")
 }

@@ -15,7 +15,7 @@ type Post struct {
 	User        userInfra.User         `gorm:"foreignKey:UserId"`
 	Comments    []commentInfra.Comment `gorm:"foreignKey:PostId"`
 	State       string                 `gorm:"type:varchar(20);not null;index" json:"state"`
-	PublishedAt *time.Time             `gorm:"type:timestamp" json:"posted_at,omitempty"`
+	PublishedAt *time.Time             `gorm:"column:published_at;type:timestamp"`
 	CreatedAt   time.Time              `gorm:"type:timestamp;not null;column:created_at"`
 	UpdatedAt   time.Time              `gorm:"type:timestamp;not null;column:updated_at"`
 	Version     int                    `gorm:"type:int;not null;default:0"`

@@ -219,40 +219,40 @@ func (p *Paginator) GetSorter(r *http.Request) ([]SortField, error) {
 	return result, nil
 }
 
-func (p *Paginator) GetFilter(r *http.Request) (map[string]interface{}, error) {
-	filterField := p.getFieldConfig(p.opts.Fields.Filter)
-	filterValue := p.fromRequest(r, filterField)
+// func (p *Paginator) GetFilter(r *http.Request) (map[string]interface{}, error) {
+// 	filterField := p.getFieldConfig(p.opts.Fields.Filter)
+// 	filterValue := p.fromRequest(r, filterField)
 
-	if filterValue == nil || filterValue == "" {
-		if !p.opts.UseDefaults {
-			return nil, customError.NewBadRequestError[any](
-				fmt.Sprintf("Missing '%s.%s' value", filterField.From, filterField.Name), "", nil)
-		}
-		return p.opts.Defaults.Filter, nil
-	}
+// 	if filterValue == nil || filterValue == "" {
+// 		if !p.opts.UseDefaults {
+// 			return nil, customError.NewBadRequestError[any](
+// 				fmt.Sprintf("Missing '%s.%s' value", filterField.From, filterField.Name), "", nil)
+// 		}
+// 		return p.opts.Defaults.Filter, nil
+// 	}
 
-	var filter map[string]interface{}
-	switch v := filterValue.(type) {
-	case map[string]interface{}:
-		filter = v
-	case string:
-		if err := json.Unmarshal([]byte(v), &filter); err != nil {
-			return nil, customError.NewBadRequestError[any](
-				fmt.Sprintf("Invalid '%s.%s' format: not valid JSON", filterField.From, filterField.Name), "", nil)
-		}
-	default:
-		return nil, customError.NewBadRequestError[any]("Invalid filter format", "", nil)
-	}
+// 	var filter map[string]interface{}
+// 	switch v := filterValue.(type) {
+// 	case map[string]interface{}:
+// 		filter = v
+// 	case string:
+// 		if err := json.Unmarshal([]byte(v), &filter); err != nil {
+// 			return nil, customError.NewBadRequestError[any](
+// 				fmt.Sprintf("Invalid '%s.%s' format: not valid JSON", filterField.From, filterField.Name), "", nil)
+// 		}
+// 	default:
+// 		return nil, customError.NewBadRequestError[any]("Invalid filter format", "", nil)
+// 	}
 
-	if p.opts.FilterSchema != nil {
-		err := p.validate.Struct(p.opts.FilterSchema)
-		if err != nil {
-			if verr, ok := err.(validator.ValidationErrors); ok {
-				return nil, customError.NewValidationError("Invalid filter parameters", "", verr)
-			}
-			return nil, err
-		}
-	}
+// 	if p.opts.FilterSchema != nil {
+// 		err := p.validate.Struct(p.opts.FilterSchema)
+// 		if err != nil {
+// 			if verr, ok := err.(validator.ValidationErrors); ok {
+// 				return nil, customError.NewValidationError("Invalid filter parameters", "", verr)
+// 			}
+// 			return nil, err
+// 		}
+// 	}
 
-	return filter, nil
-}
+// 	return filter, nil
+// }

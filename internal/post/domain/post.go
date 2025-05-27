@@ -57,6 +57,7 @@ func (a *Post) PublishPost() (*Post, error) {
 	a.State = StatePublished
 	a.PublishedAt = &now
 	a.UpdatedAt = now
+	a.Version = a.Version + 1
 	return a, nil
 }
 
@@ -72,6 +73,7 @@ func (a *Post) MarkAsDeleted() (*Post, error) {
 func (a *Post) ChangeTitle(title string) (*Post, error) {
 	a.Title = title
 	a.UpdatedAt = time.Now()
+	a.Version = a.Version + 1
 	if err := a.validate(); err != nil {
 		return nil, err
 	}
@@ -80,6 +82,7 @@ func (a *Post) ChangeTitle(title string) (*Post, error) {
 func (a *Post) ChangeContent(content string) (*Post, error) {
 	a.Content = content
 	a.UpdatedAt = time.Now()
+	a.Version = a.Version + 1
 	if err := a.validate(); err != nil {
 		return nil, err
 	}

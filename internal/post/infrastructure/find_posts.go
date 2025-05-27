@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"strings"
 
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/contracts"
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/hashids"
@@ -38,7 +39,8 @@ func (f *FindPostsDeps) Execute(ctx context.Context, params query.FindPostsQuery
 
 	// Filter by Title (case-insensitive partial match)
 	if params.Filter.Title != "" {
-		postsData = postsData.Where("LOWER(title) LIKE ?", "%"+params.Filter.Title+"%")
+		title := strings.ToLower(params.Filter.Title)
+		postsData = postsData.Where("LOWER(title) LIKE ?", "%"+title+"%")
 	}
 
 	if params.Filter.PublishedOnly {
@@ -49,7 +51,7 @@ func (f *FindPostsDeps) Execute(ctx context.Context, params query.FindPostsQuery
 	if len(params.Filter.PublishedBetween) == 2 {
 		start := params.Filter.PublishedBetween[0]
 		end := params.Filter.PublishedBetween[1]
-		postsData = postsData.Where("posted_at BETWEEN ? AND ?", start, end)
+		postsData = postsData.Where("published_at BETWEEN ? AND ?", start, end)
 	}
 
 	// Sort by created_at DESC
@@ -84,8 +86,8 @@ func (f *FindPostsDeps) Execute(ctx context.Context, params query.FindPostsQuery
 				FirstName: post.User.FirstName,
 				LastName:  post.User.LastName,
 			},
-			State:    post.State,
-			PostedAt: post.PublishedAt,
+			State:     post.State,
+			PostedAt:  post.PublishedAt,
 			CreatedAt: &post.CreatedAt,
 		}
 	}

@@ -5,12 +5,14 @@ import (
 
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/extension"
 	"github.com/BrockMekonnen/go-clean-starter/core/lib/respond"
+	"github.com/BrockMekonnen/go-clean-starter/internal/post/app/query"
 	"github.com/BrockMekonnen/go-clean-starter/internal/post/app/usecase"
 	"github.com/gorilla/mux"
 )
 
 func PublishPostHandler(
 	publishPost usecase.PublishPostUsecase,
+	findPostById query.FindPostById,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -22,15 +24,22 @@ func PublishPostHandler(
 			return
 		}
 
-		_, err = publishPost(r.Context(), usecase.PublishPostParams{
+		updatedId, err := publishPost(r.Context(), usecase.PublishPostParams{
 			ID:     postId,
 			UserId: authCtx.Credentials.UID,
 		})
 
 		if err != nil {
 			respond.Error(w, err)
+			return;
 		}
 
-		respond.SuccessWithData(w, http.StatusOK, postId)
+		result, err := findPostById.Execute(r.Context(), updatedId)
+		if err != nil {
+			respond.Error(w, err)
+			return
+		}
+
+		respond.Success(w, http.StatusOK, result)
 	}
 }
