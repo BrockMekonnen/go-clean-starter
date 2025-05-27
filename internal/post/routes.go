@@ -22,9 +22,9 @@ func MakePostRoutes() {
 	//* Register In Auth Routes
 	authRouter.HandleFunc("/posts", createPostHandler).Methods("POST")
 	authRouter.HandleFunc("/posts", findPostsHandler).Methods("GET")
-	authRouter.HandleFunc("/me/posts", findMyPostsHandler).Methods("GET")
 	authRouter.HandleFunc("/posts/{id}", findPostByIdHandler).Methods("GET")
 	authRouter.HandleFunc("/posts/{id}", deletePostHandler).Methods("DELETE")
 	authRouter.HandleFunc("/posts/{id}", updatePostHandler).Methods("PATCH")
 	authRouter.HandleFunc("/posts/{id}/publish", publishPostHandler).Methods("PATCH")
+	authRouter.HandleFunc("/users/me/posts", findMyPostsHandler).Methods("GET")
 }
